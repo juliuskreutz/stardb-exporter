@@ -2,12 +2,7 @@
 
 ## Usage
 
-In `.env` set `LIB` to the absolute path of the npcap sdk lib folder, which you can download [here](https://npcap.com/#download).
+Go to the latest run [here](https://github.com/juliuskreutz/stardb-exporter/actions/workflows/build.yml) and scroll down to download `stardb-exporter.zip` and extract it (to a folder prefereably).
 
-Open HSR before going into Hyperspace.
-
-```
-just run
-```
-
-Wait until is says `Started Listening` and start the game. The output will be in `export.json`.
+Launch the game until the paint, where you are right before going into hyper speed. Execute the exporter and wait for it to say `All ready~!`.
+Go into hyperspeed and it should create the `export.json` file.

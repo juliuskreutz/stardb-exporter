@@ -62,8 +62,6 @@ fn main() -> Result<()> {
 
                 let quest_data: GetQuestDataScRsp = command.parse_proto()?;
 
-                println!("Finished achievements");
-
                 for quest in quest_data.quest_list {
                     if achievement_ids.contains(&quest.id) && quest.status.value() == 3 {
                         achievements.push(quest.id);
@@ -97,6 +95,15 @@ fn main() -> Result<()> {
         },
     )?;
 
+    println!(
+        "Exported successfully to {}",
+        std::env::current_dir()?
+            .join("export.json")
+            .to_string_lossy()
+    );
+
+    std::io::stdin().read_line(&mut String::new())?;
+
     Ok(())
 }
 
@@ -123,7 +130,7 @@ fn capture_device(device: Device, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
 
     capture.filter("udp portrange 23301-23302", true).unwrap();
 
-    println!("Started Listening");
+    println!("All ready~!");
 
     while let Ok(packet) = capture.next_packet() {
         tx.send(packet.data.to_vec())?;
