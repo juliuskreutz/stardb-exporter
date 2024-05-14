@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use pcap::{ConnectionStatus, Device};
 use reliquary::network::{
@@ -8,7 +8,7 @@ use reliquary::network::{
     },
     GamePacket, GameSniffer,
 };
-use std::{collections::HashMap, env, fs::File, io::BufWriter, sync::mpsc};
+use std::{collections::HashMap, fs::File, io::BufWriter, sync::mpsc};
 
 #[derive(serde::Deserialize)]
 struct Id {
@@ -22,18 +22,6 @@ struct Jason {
 }
 
 fn main() -> Result<()> {
-    let mut args = env::args();
-    args.next();
-
-    let Some(ncap_path) = args.next() else {
-        return Err(anyhow!("Usage: hsr-exporter.exe C:/Full/Path/To/Ncap/Lib"));
-    };
-
-    println!("{ncap_path}");
-
-    let lib = env::var("LIB").unwrap_or_default();
-    env::set_var("LIB", format!("{lib};{ncap_path};"));
-
     let achievements: Vec<Id> = ureq::get("https://stardb.gg/api/achievements")
         .call()?
         .into_json()?;
