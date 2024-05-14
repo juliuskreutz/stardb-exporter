@@ -60,6 +60,8 @@ fn main() -> Result<()> {
                     continue;
                 }
 
+                println!("Found achievements!");
+
                 let quest_data: GetQuestDataScRsp = command.parse_proto()?;
 
                 for quest in quest_data.quest_list {
@@ -72,6 +74,12 @@ fn main() -> Result<()> {
             }
 
             if command.command_id == command_id::GetBagScRsp {
+                if !books.is_empty() {
+                    continue;
+                }
+
+                println!("Found books!");
+
                 let bag: GetBagScRsp = command.parse_proto()?;
 
                 for material in bag.material_list {
@@ -118,19 +126,19 @@ fn load_online_keys() -> Result<HashMap<u32, Vec<u8>>> {
 }
 
 fn capture_device(device: Device, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
-    let mut capture = pcap::Capture::from_device(device)?
-        .immediate_mode(true)
-        .promisc(true)
-        .timeout(0)
-        .open()?;
+    loop {
+        let mut capture = pcap::Capture::from_device(device.clone())?
+            .immediate_mode(true)
+            .promisc(true)
+            .timeout(0)
+            .open()?;
 
-    capture.filter("udp portrange 23301-23302", true).unwrap();
+        capture.filter("udp portrange 23301-23302", true).unwrap();
 
-    println!("All ready~!");
+        println!("All ready~!");
 
-    while let Ok(packet) = capture.next_packet() {
-        tx.send(packet.data.to_vec())?;
+        while let Ok(packet) = capture.next_packet() {
+            tx.send(packet.data.to_vec())?;
+        }
     }
-
-    Ok(())
 }
