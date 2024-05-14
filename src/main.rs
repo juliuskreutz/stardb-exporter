@@ -162,14 +162,25 @@ fn main() -> Result<()> {
         }
     }
 
-    let json = serde_json::to_string(&Export {
+    let export = Export {
         achievements,
         books,
-    })?;
+    };
+    let json = serde_json::to_string(&export)?;
 
     clipboard_win::set_clipboard_string(&json).map_err(|_| anyhow!("Error setting clipboard"))?;
 
-    println!("{}", uwu("Export copied to clipboard", args.uwu));
+    println!(
+        "{}",
+        uwu(
+            &format!(
+                "Copied {} achievement and {} books to clipboard",
+                export.achievements.len(),
+                export.books.len()
+            ),
+            args.uwu
+        )
+    );
     println!("{}", uwu("Press return to exit...", args.uwu));
 
     std::io::stdout().flush()?;
