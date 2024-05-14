@@ -13,8 +13,8 @@ jobs:
 
       - name: Get Npcap Sdk
         run: |
-          wget https://npcap.com/dist/npcap-sdk-1.13.zip
-          unzip npcap-sdk-1.13.zip
+          curl https://npcap.com/dist/npcap-sdk-1.13.zip -o sdk.zip
+          unzip sdk.zip
 
       - name: Get Rust Toolchain
         uses: actions-rs/toolchain@v1
