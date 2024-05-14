@@ -1,6 +1,6 @@
-# hsr-exporter
+# stardb-exporter
 
-## Usage
+## Instructions
 
 Download and install the [Npcap Installer](https://npcap.com/#download).
 
