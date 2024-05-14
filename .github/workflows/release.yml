@@ -1,10 +1,10 @@
-name: Build
+name: Release
 
 on: workflow_dispatch
 
 jobs:
   deploy:
-    name: Build
+    name: Release
     runs-on: windows-latest
 
     steps:
@@ -29,8 +29,11 @@ jobs:
         env:
           LIB: ${{ github.workspace }}/Lib/x64/
 
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
+      - name: Release
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          name: stardb-exporter
-          path: target/release/stardb-exporter.exe
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: Latest Release
+          files: target/release/stardb-exporter.exe
