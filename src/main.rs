@@ -68,7 +68,9 @@ fn main() -> Result<()> {
                 let quest_data: GetQuestDataScRsp = command.parse_proto()?;
 
                 for quest in quest_data.quest_list {
-                    if achievement_ids.contains(&quest.id) && quest.status.value() == 3 {
+                    if achievement_ids.contains(&quest.id)
+                        && (quest.status.value() == 2 || quest.status.value() == 3)
+                    {
                         achievements.push(quest.id);
                     }
                 }
