@@ -8,7 +8,12 @@ use reliquary::network::{
     },
     GamePacket, GameSniffer,
 };
-use std::{collections::HashMap, fs::File, io::BufWriter, sync::mpsc};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{BufWriter, Write},
+    sync::mpsc,
+};
 
 #[derive(serde::Deserialize)]
 struct Id {
@@ -102,6 +107,9 @@ fn main() -> Result<()> {
             .to_string_lossy()
     );
 
+    println!("Press return to exit...");
+
+    std::io::stdout().flush()?;
     std::io::stdin().read_line(&mut String::new())?;
 
     Ok(())
