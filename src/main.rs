@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use base64::{prelude::BASE64_STANDARD, Engine};
 use pcap::{ConnectionStatus, Device};
 use reliquary::network::{
@@ -8,12 +8,7 @@ use reliquary::network::{
     },
     GamePacket, GameSniffer,
 };
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{BufWriter, Write},
-    sync::mpsc,
-};
+use std::{collections::HashMap, io::Write, sync::mpsc};
 
 #[derive(serde::Deserialize)]
 struct Id {
@@ -21,7 +16,7 @@ struct Id {
 }
 
 #[derive(serde::Serialize)]
-struct Jason {
+struct Export {
     achievements: Vec<u32>,
     books: Vec<u32>,
 }
@@ -92,23 +87,14 @@ fn main() -> Result<()> {
         }
     }
 
-    let file = File::create("export.json")?;
+    let json = serde_json::to_string(&Export {
+        achievements,
+        books,
+    })?;
 
-    serde_json::to_writer(
-        BufWriter::new(file),
-        &Jason {
-            achievements,
-            books,
-        },
-    )?;
+    clipboard_win::set_clipboard_string(&json).map_err(|_| anyhow!("Error setting clipboard"))?;
 
-    println!(
-        "Exported successfully to {}",
-        std::env::current_dir()?
-            .join("export.json")
-            .to_string_lossy()
-    );
-
+    println!("Export copied to clipboard");
     println!("Press return to exit...");
 
     std::io::stdout().flush()?;

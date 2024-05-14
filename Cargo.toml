@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.83"
 base64 = "0.22.1"
+clipboard-win = "5.3.1"
 etherparse = "0.14.3"
 pcap = "2.0.0"
 reliquary = { git = "https://github.com/IceDynamix/reliquary" }
