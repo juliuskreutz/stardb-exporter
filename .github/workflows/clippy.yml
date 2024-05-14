@@ -1,0 +1,25 @@
+name: Clippy
+
+on: push
+
+jobs:
+  deploy:
+    name: Clippy
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Get Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+        env:
+          LIB: ${{ github.workspace }}/NpcapLib/x64/
