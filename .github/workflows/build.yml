@@ -32,5 +32,5 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
-          name: stardb-exporter.zip
+          name: stardb-exporter
           path: target/release/stardb-exporter.exe
