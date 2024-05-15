@@ -190,9 +190,11 @@ fn main() -> Result<()> {
 }
 
 fn load_online_keys(args: Args) -> Result<HashMap<u32, Vec<u8>>> {
-    let keys: HashMap<u32, String> = ureq::get("https://stardb.gg/static/keys.json")
-        .call()?
-        .into_json()?;
+    let keys: HashMap<u32, String> = ureq::get(
+        "https://raw.githubusercontent.com/juliuskreutz/stardb-exporter/master/keys.json",
+    )
+    .call()?
+    .into_json()?;
 
     let mut keys_bytes = HashMap::new();
 
