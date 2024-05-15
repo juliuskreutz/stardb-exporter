@@ -174,7 +174,7 @@ fn main() -> Result<()> {
         "{}",
         uwu(
             &format!(
-                "Copied {} achievement and {} books to clipboard",
+                "Copied {} achievements and {} books to clipboard",
                 export.achievements.len(),
                 export.books.len()
             ),
