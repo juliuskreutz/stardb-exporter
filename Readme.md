@@ -2,7 +2,7 @@
 
 ## Instructions
 
-- Download and install the [Npcap Installer](https://npcap.com/#download).
+- Download and install the [Npcap Installer](https://npcap.com/#download) (Ensure `Install Npcap in WinPcap API-compatible mode` is ticked).
 - Download the latest release [here](https://github.com/juliuskreutz/stardb-exporter/releases/tag/latest) (and move it to an own folder prefereably).
 - Launch the game to the point, where you are right before going into hyper speed.
 - Execute the exporter and wait for it to say `All ready~!`.
