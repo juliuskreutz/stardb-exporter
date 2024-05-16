@@ -143,5 +143,7 @@ fn capture_device(device: Device, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
         while let Ok(packet) = capture.next_packet() {
             tx.send(packet.data.to_vec())?;
         }
+
+        println!("{}", uwu("Disconnected. Starting up again...", args.uwu));
     }
 }
