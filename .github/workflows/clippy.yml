@@ -4,7 +4,7 @@ on: push
 
 jobs:
   clippy-windows:
-    name: Clippy
+    name: Clippy Windows
     runs-on: windows-latest
 
     steps:
@@ -30,7 +30,7 @@ jobs:
           LIB: ${{ github.workspace }}/Lib/x64/
 
   clippy-linux:
-    name: Clippy
+    name: Clippy Linux
     runs-on: ubuntu-latest
 
     steps:
