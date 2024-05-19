@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use pcap::{ConnectionStatus, Device};
 use reliquary::network::{
@@ -42,7 +42,11 @@ fn main() -> Result<()> {
         .unwrap();
 
     let (tx, rx) = mpsc::channel();
-    std::thread::spawn(move || capture_device(device, tx));
+    std::thread::spawn(move || {
+        if let Err(e) = capture_device(device, tx) {
+            eprintln!("Error: {}", e);
+        }
+    });
 
     let mut sniffer = GameSniffer::new().set_initial_keys(keys);
 
@@ -91,13 +95,18 @@ fn main() -> Result<()> {
         }
     }
 
+    if achievements.is_empty() && books.is_empty() {
+        return Err(anyhow::anyhow!("No achievements or books found"));
+    }
+
     let export = Export {
         achievements,
         books,
     };
     let json = serde_json::to_string(&export)?;
 
-    clipboard_win::set_clipboard_string(&json).map_err(|_| anyhow!("Error setting clipboard"))?;
+    let mut clipboard = arboard::Clipboard::new()?;
+    clipboard.set_text(json)?;
 
     println!(
         "Copied {} achievements and {} books to clipboard",

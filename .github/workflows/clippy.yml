@@ -3,7 +3,7 @@ name: Clippy
 on: push
 
 jobs:
-  deploy:
+  clippy-windows:
     name: Clippy
     runs-on: windows-latest
 
@@ -28,3 +28,22 @@ jobs:
           command: clippy
         env:
           LIB: ${{ github.workspace }}/Lib/x64/
+
+  clippy-linux:
+    name: Clippy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Get Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy

@@ -6,8 +6,8 @@ permissions:
   contents: write
 
 jobs:
-  deploy:
-    name: Release
+  build-windows:
+    name: Build Windows
     runs-on: windows-latest
 
     steps:
@@ -32,6 +32,51 @@ jobs:
         env:
           LIB: ${{ github.workspace }}/Lib/x64/
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: target/release/stardb-exporter.exe
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Get Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: target/release/stardb-exporter
+
+  release:
+    name: Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Rename
+        run: |
+          mv windows/stardb-exporter.exe stardb-exporter.exe
+          mv linux/stardb-exporter stardb-exporter-linux
+
       - name: Release
         uses: marvinpinto/action-automatic-releases@latest
         with:
@@ -39,4 +84,6 @@ jobs:
           automatic_release_tag: latest
           prerelease: true
           title: Latest Release
-          files: target/release/stardb-exporter.exe
+          files: |
+            stardb-exporter.exe
+            stardb-exporter-linux
