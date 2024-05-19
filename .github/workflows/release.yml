@@ -66,9 +66,37 @@ jobs:
           name: linux
           path: target/release/stardb-exporter
 
+  build-macos:
+    name: Build Macos
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install libpcap
+        run: brew update && brew install libpcap
+
+      - name: Get Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: target/release/stardb-exporter
+
   release:
     name: Release
-    needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
 
     steps:
@@ -79,6 +107,7 @@ jobs:
         run: |
           mv windows/stardb-exporter.exe stardb-exporter.exe
           mv linux/stardb-exporter stardb-exporter-linux
+          mv macos/stardb-exporter stardb-exporter-macos
 
       - name: Release
         uses: marvinpinto/action-automatic-releases@latest
@@ -90,3 +119,4 @@ jobs:
           files: |
             stardb-exporter.exe
             stardb-exporter-linux
+            stardb-exporter-macos
