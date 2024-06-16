@@ -34,19 +34,23 @@ fn main() -> Result<()> {
 
     let keys = load_online_keys()?;
 
-    let device = pcap::Device::list()?
+    let (tx, rx) = mpsc::channel();
+
+    for device in pcap::Device::list()?
         .into_iter()
         .filter(|d| d.flags.connection_status == ConnectionStatus::Connected)
         .filter(|d| !d.addresses.is_empty())
-        .find(|d| !d.flags.is_loopback())
-        .unwrap();
+        .filter(|d| !d.flags.is_loopback())
+    {
+        let tx = tx.clone();
+        std::thread::spawn(move || {
+            if let Err(e) = capture_device(device, tx) {
+                eprintln!("Error: {}", e);
+            }
+        });
+    }
 
-    let (tx, rx) = mpsc::channel();
-    std::thread::spawn(move || {
-        if let Err(e) = capture_device(device, tx) {
-            eprintln!("Error: {}", e);
-        }
-    });
+    drop(tx);
 
     let mut sniffer = GameSniffer::new().set_initial_keys(keys);
 
@@ -149,10 +153,20 @@ fn capture_device(device: Device, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
 
         println!("All ready~!");
 
-        while let Ok(packet) = capture.next_packet() {
-            tx.send(packet.data.to_vec())?;
+        let mut has_captured = false;
+
+        loop {
+            match capture.next_packet() {
+                Ok(packet) => {
+                    tx.send(packet.data.to_vec())?;
+                    has_captured = true;
+                }
+                Err(_) if !has_captured => break,
+                Err(pcap::Error::TimeoutExpired) => continue,
+                Err(e) => return Err(anyhow::anyhow!("{e}")),
+            }
         }
 
-        println!("Disconnected. Starting up again...");
+        println!("Error. Starting up again...");
     }
 }
