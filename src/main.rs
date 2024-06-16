@@ -22,6 +22,19 @@ struct Export {
 }
 
 fn main() -> Result<()> {
+    if let Err(e) = export() {
+        println!("Error: {e}");
+    }
+
+    println!("Press return to exit...");
+
+    std::io::stdout().flush()?;
+    std::io::stdin().read_line(&mut String::new())?;
+
+    Ok(())
+}
+
+fn export() -> Result<()> {
     let achievements: Vec<Id> = ureq::get("https://stardb.gg/api/achievements")
         .call()?
         .into_json()?;
@@ -34,22 +47,19 @@ fn main() -> Result<()> {
 
     let keys = load_online_keys()?;
 
+    let mut join_handles = Vec::new();
     let (tx, rx) = mpsc::channel();
-
-    for device in pcap::Device::list()?
+    for device in Device::list()
+        .unwrap()
         .into_iter()
         .filter(|d| d.flags.connection_status == ConnectionStatus::Connected)
         .filter(|d| !d.addresses.is_empty())
         .filter(|d| !d.flags.is_loopback())
     {
         let tx = tx.clone();
-        std::thread::spawn(move || {
-            if let Err(e) = capture_device(device, tx) {
-                eprintln!("Error: {}", e);
-            }
-        });
+        let handle = std::thread::spawn(move || capture_device(device, tx));
+        join_handles.push(handle);
     }
-
     drop(tx);
 
     let mut sniffer = GameSniffer::new().set_initial_keys(keys);
@@ -68,13 +78,15 @@ fn main() -> Result<()> {
                     continue;
                 }
 
-                let quest_data: GetQuestDataScRsp = command.parse_proto()?;
+                println!("Got achievements packet");
 
-                for quest in quest_data.quest_list {
-                    if achievement_ids.contains(&quest.id)
-                        && (quest.status.value() == 2 || quest.status.value() == 3)
-                    {
-                        achievements.push(quest.id);
+                if let Ok(quest_data) = command.parse_proto::<GetQuestDataScRsp>() {
+                    for quest in quest_data.quest_list {
+                        if achievement_ids.contains(&quest.id)
+                            && (quest.status.value() == 2 || quest.status.value() == 3)
+                        {
+                            achievements.push(quest.id);
+                        }
                     }
                 }
             }
@@ -84,11 +96,13 @@ fn main() -> Result<()> {
                     continue;
                 }
 
-                let bag: GetBagScRsp = command.parse_proto()?;
+                println!("Got books packet");
 
-                for material in bag.material_list {
-                    if book_ids.contains(&material.tid) {
-                        books.push(material.tid);
+                if let Ok(bag) = command.parse_proto::<GetBagScRsp>() {
+                    for material in bag.material_list {
+                        if book_ids.contains(&material.tid) {
+                            books.push(material.tid);
+                        }
                     }
                 }
             }
@@ -102,6 +116,8 @@ fn main() -> Result<()> {
     if achievements.is_empty() && books.is_empty() {
         return Err(anyhow::anyhow!("No achievements or books found"));
     }
+
+    println!("Copying to clipboard");
 
     let export = Export {
         achievements,
@@ -117,10 +133,6 @@ fn main() -> Result<()> {
         export.achievements.len(),
         export.books.len()
     );
-    println!("Press return to exit...");
-
-    std::io::stdout().flush()?;
-    std::io::stdin().read_line(&mut String::new())?;
 
     Ok(())
 }
