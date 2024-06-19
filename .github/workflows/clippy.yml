@@ -46,6 +46,9 @@ jobs:
           toolchain: stable
           components: clippy
 
+      - name: Path
+        run: python patch.py
+
       - name: Clippy
         uses: actions-rs/cargo@v1
         with:
@@ -64,6 +67,9 @@ jobs:
         with:
           toolchain: stable
           components: clippy
+
+      - name: Path
+        run: python patch.py
 
       - name: Clippy
         uses: actions-rs/cargo@v1
