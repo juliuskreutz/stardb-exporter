@@ -13,11 +13,11 @@ os.mkdir("data")
 
 urllib.request.urlretrieve(
     "https://raw.githubusercontent.com/Melledy/LunarCore/development/src/main/java/emu/lunarcore/server/packet/CmdId.java",
-    "CmdId.java",
+    "cmdid.java",
 )
 # stolen with love from https://github.com/hashblen
 dict = {}
-with open("CmdID.java", "r") as f:
+with open("cmdid.java", "r") as f:
     while f.readline().strip() != "// Cmd Ids":
         pass
     for line in f.readlines():
