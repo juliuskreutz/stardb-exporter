@@ -8,7 +8,7 @@ use reliquary::network::{
     },
     GamePacket, GameSniffer,
 };
-use std::{collections::HashMap, io::Write, sync::mpsc};
+use std::{collections::HashMap, io::Write, panic::catch_unwind, sync::mpsc};
 
 #[derive(serde::Deserialize)]
 struct Id {
@@ -22,8 +22,8 @@ struct Export {
 }
 
 fn main() -> Result<()> {
-    if let Err(e) = export() {
-        println!("Error: {e}");
+    if let Err(e) = catch_unwind(|| export()) {
+        println!("{e:?}")
     }
 
     println!("Press return to exit...");
