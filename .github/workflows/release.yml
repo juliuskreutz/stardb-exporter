@@ -24,6 +24,9 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Path
+        run: python patch.py
+
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -54,6 +57,9 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Path
+        run: python patch.py
+
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -81,6 +87,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Path
+        run: python patch.py
 
       - name: Build
         uses: actions-rs/cargo@v1
