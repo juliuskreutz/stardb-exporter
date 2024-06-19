@@ -2,18 +2,19 @@ import os
 import re
 import json
 import shutil
+import urllib.request
 
 # Using system commands cause lazy
 os.system("git clone https://gitlab.com/Melledy/LunarCore-Protos.git")
 os.system("git clone https://github.com/IceDynamix/reliquary.git")
 os.system("git clone https://github.com/IceDynamix/reliquary-codegen.git")
-os.system(
-    "curl https://raw.githubusercontent.com/Melledy/LunarCore/development/src/main/java/emu/lunarcore/server/packet/CmdId.java > CmdId.java"
-)
 
 os.mkdir("data")
-shutil.copytree("LunarCore-Protos/proto", "data/proto")
 
+urllib.request.urlretrieve(
+    "https://raw.githubusercontent.com/Melledy/LunarCore/development/src/main/java/emu/lunarcore/server/packet/CmdId.java",
+    "CmdId.java",
+)
 # stolen with love from https://github.com/hashblen
 dict = {}
 with open("CmdID.java", "r") as f:
@@ -29,5 +30,7 @@ with open("CmdID.java", "r") as f:
 with open("data/packetIds.json", "w") as f:
     json.dump(dict, f)
 # stolen with love from https://github.com/hashblen
+
+shutil.copytree("LunarCore-Protos/proto", "data/proto")
 
 os.system("cd reliquary-codegen && cargo run -- ../reliquary ../data")

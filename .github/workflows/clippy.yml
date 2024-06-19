@@ -22,7 +22,7 @@ jobs:
           toolchain: stable
           components: clippy
 
-      - name: Path
+      - name: Patch
         run: python patch.py
 
       - name: Clippy
@@ -46,7 +46,7 @@ jobs:
           toolchain: stable
           components: clippy
 
-      - name: Path
+      - name: Patch
         run: python patch.py
 
       - name: Clippy
@@ -68,7 +68,7 @@ jobs:
           toolchain: stable
           components: clippy
 
-      - name: Path
+      - name: Patch
         run: python patch.py
 
       - name: Clippy

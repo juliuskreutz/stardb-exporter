@@ -24,7 +24,7 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Path
+      - name: Patch
         run: python patch.py
 
       - name: Build
@@ -57,7 +57,7 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Path
+      - name: Patch
         run: python patch.py
 
       - name: Build
@@ -88,7 +88,7 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Path
+      - name: Patch
         run: python patch.py
 
       - name: Build
