@@ -22,7 +22,11 @@ struct Export {
 }
 
 fn main() -> Result<()> {
-    if let Err(e) = catch_unwind(|| export()) {
+    if let Err(e) = catch_unwind(|| {
+        if let Err(e) = export() {
+            println!("{e:?}")
+        }
+    }) {
         println!("{e:?}")
     }
 
