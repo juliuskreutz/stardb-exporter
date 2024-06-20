@@ -50,17 +50,14 @@ fn main() -> Result<()> {
 }
 
 fn export() -> Result<()> {
-    let achievements: Vec<Id> = ureq::get("https://stardb.gg/api/achievements")
-        .call()?
-        .into_json()?;
+    let achievements: Vec<Id> =
+        reqwest::blocking::get("https://stardb.gg/api/achievements")?.json()?;
     let achievement_ids: Vec<_> = achievements.into_iter().map(|a| a.id).collect();
 
-    let books: Vec<Id> = ureq::get("https://stardb.gg/api/books")
-        .call()?
-        .into_json()?;
+    let books: Vec<Id> = reqwest::blocking::get("https://stardb.gg/api/books")?.json()?;
     let book_ids: Vec<_> = books.into_iter().map(|a| a.id).collect();
 
-    let keys = load_online_keys()?;
+    let keys = load_keys()?;
 
     let mut join_handles = Vec::new();
     let (tx, rx) = mpsc::channel();
@@ -152,12 +149,8 @@ fn export() -> Result<()> {
     Ok(())
 }
 
-fn load_online_keys() -> Result<HashMap<u32, Vec<u8>>> {
-    let keys: HashMap<u32, String> = ureq::get(
-        "https://raw.githubusercontent.com/juliuskreutz/stardb-exporter/master/keys.json",
-    )
-    .call()?
-    .into_json()?;
+fn load_keys() -> Result<HashMap<u32, Vec<u8>>> {
+    let keys: HashMap<u32, String> = serde_json::from_slice(include_bytes!("../keys.json"))?;
 
     let mut keys_bytes = HashMap::new();
 
