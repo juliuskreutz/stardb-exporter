@@ -100,14 +100,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
       - name: Get package version
         id: cargo-get
         uses: nicolaiunrein/cargo-get@master
         with:
           subcommand: package.version
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
 
       - name: Rename
         run: |
