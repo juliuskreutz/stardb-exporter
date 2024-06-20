@@ -54,7 +54,7 @@ jobs:
           args: --release
 
       - name: Cap Net Raw
-        run: setcap CAP_NET_RAW=+ep target/release/stardb-exporter
+        run: sudo setcap CAP_NET_RAW=+ep target/release/stardb-exporter
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
