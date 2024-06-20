@@ -50,11 +50,14 @@ fn main() -> Result<()> {
 }
 
 fn export() -> Result<()> {
-    let achievements: Vec<Id> =
-        reqwest::blocking::get("https://stardb.gg/api/achievements")?.json()?;
+    let achievements: Vec<Id> = ureq::get("https://stardb.gg/api/achievements")
+        .call()?
+        .into_json()?;
     let achievement_ids: Vec<_> = achievements.into_iter().map(|a| a.id).collect();
 
-    let books: Vec<Id> = reqwest::blocking::get("https://stardb.gg/api/books")?.json()?;
+    let books: Vec<Id> = ureq::get("https://stardb.gg/api/books")
+        .call()?
+        .into_json()?;
     let book_ids: Vec<_> = books.into_iter().map(|a| a.id).collect();
 
     let keys = load_keys()?;
