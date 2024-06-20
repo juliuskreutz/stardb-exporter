@@ -129,7 +129,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: v${{ steps.cargo-get.outputs.metadata }}
           prerelease: false
-          title: Latest Release
+          title: v${{ steps.cargo-get.outputs.metadata }} Release
           files: |
             stardb-exporter.exe
             stardb-exporter-linux
