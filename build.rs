@@ -1,3 +1,6 @@
+#[cfg(not(target_os = "windows"))]
+fn main() {}
+
 #[cfg(target_os = "windows")]
 fn main() -> anyhow::Result<()> {
     let out_dir = std::env::var("OUT_DIR")?;
