@@ -1,6 +1,9 @@
 name: Release
 
-on: workflow_dispatch
+on: 
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -23,9 +26,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-
-      - name: Patch
-        run: python patch.py
 
       - name: Build
         uses: actions-rs/cargo@v1
@@ -57,9 +57,6 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Patch
-        run: python patch.py
-
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -87,9 +84,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-
-      - name: Patch
-        run: python patch.py
 
       - name: Build
         uses: actions-rs/cargo@v1
@@ -123,7 +117,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: latest
-          prerelease: true
+          prerelease: false
           title: Latest Release
           files: |
             stardb-exporter.exe

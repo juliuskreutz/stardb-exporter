@@ -22,6 +22,25 @@ struct Export {
 }
 
 fn main() -> Result<()> {
+    let bin_name = if cfg!(target_os = "windows") {
+        "stardb-exporter.exe"
+    } else if cfg!(target_os = "macos") {
+        "stardb-exporter-macos"
+    } else {
+        "stardb-exporter-linux"
+    };
+
+    let status = self_update::backends::github::Update::configure()
+        .repo_owner("juliuskreutz")
+        .repo_name("stardb-exporter")
+        .bin_name(bin_name)
+        .show_download_progress(true)
+        .current_version(self_update::cargo_crate_version!())
+        .build()?
+        .update()?;
+
+    println!("Update status: `{}`!", status.version());
+
     if let Err(e) = catch_unwind(|| {
         if let Err(e) = export() {
             println!("{e:?}")
