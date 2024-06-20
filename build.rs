@@ -6,7 +6,11 @@ fn main() -> anyhow::Result<()> {
     let out_dir = std::env::var("OUT_DIR")?;
     let out_dir = std::path::Path::new(&out_dir);
 
-    let bytes = reqwest::blocking::get("https://npcap.com/dist/npcap-sdk-1.13.zip")?.bytes()?;
+    let mut bytes = Vec::new();
+    ureq::get("https://npcap.com/dist/npcap-sdk-1.13.zip")
+        .call()?
+        .into_reader()
+        .read_to_end(&mut bytes)?;
     let cursor = std::io::Cursor::new(bytes);
     let mut archive = zip::ZipArchive::new(cursor)?;
 

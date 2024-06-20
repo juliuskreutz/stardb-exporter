@@ -19,5 +19,5 @@ ureq = { version = "2.9.7", features = ["json"] }
 
 [build-dependencies]
 anyhow = "1.0.86"
-reqwest = { version = "0.12.5", features = ["blocking"] }
+ureq = "2.9.7"
 zip = "2.1.3"
