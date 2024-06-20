@@ -1,6 +1,6 @@
 [package]
 name = "stardb-exporter"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
@@ -8,11 +8,8 @@ anyhow = "1.0.86"
 arboard = "3.4.0"
 base64 = "0.22.1"
 pcap = "2.0.0"
-reliquary = { path = "reliquary" }
+reliquary = { git = "https://github.com/juliuskreutz/reliquary" }
+self_update = "0.40.0"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 ureq = { version = "2.9.7", features = ["json"] }
-
-[build-dependencies]
-anyhow = "1.0.86"
-git2 = "0.19.0"
