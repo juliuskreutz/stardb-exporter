@@ -115,25 +115,25 @@ jobs:
       - name: Rename
         run: |
           cp windows/stardb-exporter.exe stardb-exporter.exe
-          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip stardb-exporter.exe
+          zip stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip stardb-exporter.exe
           cp linux/stardb-exporter stardb-exporter
           cp stardb-exporter stardb-exporter-linux
-          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip stardb-exporter
+          zip stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip stardb-exporter
           cp macos/stardb-exporter stardb-exporter
           cp stardb-exporter stardb-exporter-macos
-          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip stardb-exporter
+          zip stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip stardb-exporter
 
       - name: Release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.cargo-get.outputs.metadata }}
+          automatic_release_tag: v${{ steps.cargo-get.outputs.metadata }}
           prerelease: false
           title: Latest Release
           files: |
             stardb-exporter.exe
             stardb-exporter-linux
             stardb-exporter-macos
-            stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip
-            stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip
-            stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip
+            stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip
+            stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip
+            stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip
