@@ -14,11 +14,6 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Get Npcap Sdk
-        run: |
-          curl https://npcap.com/dist/npcap-sdk-1.13.zip -o sdk.zip
-          unzip sdk.zip
-
       - name: Get Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -29,8 +24,6 @@ jobs:
         with:
           command: build
           args: --release
-        env:
-          LIB: ${{ github.workspace }}/Lib/x64/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

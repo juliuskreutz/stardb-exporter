@@ -1,5 +1,2 @@
 /target
 /.direnv
-
-Cargo.lock
-export.json
