@@ -115,11 +115,13 @@ jobs:
       - name: Rename
         run: |
           cp windows/stardb-exporter.exe stardb-exporter.exe
-          cp linux/stardb-exporter stardb-exporter-linux
-          cp macos/stardb-exporter stardb-exporter-macos
-          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip windows/stardb-exporter.exe
-          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip linux/stardb-exporter
-          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip macos/stardb-exporter
+          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip stardb-exporter.exe
+          cp linux/stardb-exporter stardb-exporter
+          cp stardb-exporter stardb-exporter-linux
+          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip stardb-exporter
+          cp macos/stardb-exporter stardb-exporter
+          cp stardb-exporter stardb-exporter-macos
+          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip stardb-exporter
 
       - name: Release
         uses: marvinpinto/action-automatic-releases@latest
