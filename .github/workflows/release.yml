@@ -103,20 +103,26 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
 
+      - name: Get package version
+        id: cargo-get
+        uses: nicolaiunrein/cargo-get@master
+        with:
+          subcommand: package.version
+
       - name: Rename
         run: |
-          mv windows/stardb-exporter.exe stardb-exporter.exe
-          mv linux/stardb-exporter stardb-exporter-linux
-          mv macos/stardb-exporter stardb-exporter-macos
+          zip stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip windows/stardb-exporter.exe
+          mv stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip linux/stardb-exporter
+          mv stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip macos/stardb-exporter
 
       - name: Release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: 1.0.0
+          automatic_release_tag: ${{ steps.cargo-get.outputs.metadata }}
           prerelease: false
           title: Latest Release
           files: |
-            stardb-exporter.exe
-            stardb-exporter-linux
-            stardb-exporter-macos
+            stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip
+            stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip
+            stardb-exporter-${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip
