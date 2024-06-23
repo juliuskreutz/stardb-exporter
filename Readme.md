@@ -2,6 +2,8 @@
 
 ## Instructions
 
+This method will not work on any kind of VPN
+
 - Download and install pcap
   - Windows: [Npcap Installer](https://npcap.com/#download) (Ensure `Install Npcap in WinPcap API-compatible mode` is ticked)
   - Linux: Figure it out, lol. The package should be called libpcap
