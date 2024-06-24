@@ -19,11 +19,18 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Get Npcap Sdk
+        run: |
+          curl https://npcap.com/dist/npcap-sdk-1.13.zip -o sdk.zip
+          unzip sdk.zip
+
       - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release
+        env:
+          LIB: ${{ github.workspace }}/Lib/x64/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
