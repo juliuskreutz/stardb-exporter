@@ -17,10 +17,17 @@ jobs:
           toolchain: stable
           components: clippy
 
+      - name: Get Npcap Sdk
+        run: |
+          curl https://npcap.com/dist/npcap-sdk-1.13.zip -o sdk.zip
+          unzip sdk.zip
+
       - name: Clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+        env:
+          LIB: ${{ github.workspace }}/Lib/x64/
 
   clippy-linux:
     name: Clippy Linux
