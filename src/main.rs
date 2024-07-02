@@ -185,11 +185,11 @@ fn load_keys() -> Result<HashMap<u32, Vec<u8>>> {
 }
 
 fn capture_file(file: PathBuf, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
+    println!("Reading file~!");
+
     let mut capture = pcap::Capture::from_file(file)?;
 
     capture.filter(PACKET_FILTER, false)?;
-
-    println!("Reding file~!");
 
     while let Ok(packet) = capture.next_packet() {
         tx.send(packet.data.to_vec())?;
