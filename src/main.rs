@@ -1,5 +1,6 @@
 use anyhow::Result;
 use base64::{prelude::BASE64_STANDARD, Engine};
+use clap::Parser;
 use pcap::{ConnectionStatus, Device};
 use reliquary::network::{
     gen::{
@@ -8,7 +9,9 @@ use reliquary::network::{
     },
     GamePacket, GameSniffer,
 };
-use std::{collections::HashMap, io::Write, panic::catch_unwind, sync::mpsc};
+use std::{collections::HashMap, io::Write, panic::catch_unwind, path::PathBuf, sync::mpsc};
+
+const PACKET_FILTER: &str = "udp portrange 23301-23302";
 
 #[derive(serde::Deserialize)]
 struct Id {
@@ -19,6 +22,13 @@ struct Id {
 struct Export {
     achievements: Vec<u32>,
     books: Vec<u32>,
+}
+
+#[derive(Parser)]
+struct Args {
+    /// Read packets from .pcap file instead of capturing live packets
+    #[arg(long)]
+    pcap: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
@@ -33,8 +43,10 @@ fn main() -> Result<()> {
 
     println!("Update status: `{}`!", status.version());
 
+    let args = Args::parse();
+
     if let Err(e) = catch_unwind(|| {
-        if let Err(e) = export() {
+        if let Err(e) = export(&args) {
             println!("{e:?}")
         }
     }) {
@@ -49,7 +61,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn export() -> Result<()> {
+fn export(args: &Args) -> Result<()> {
     let achievements: Vec<Id> = ureq::get("https://stardb.gg/api/achievements")
         .call()?
         .into_json()?;
@@ -64,16 +76,24 @@ fn export() -> Result<()> {
 
     let mut join_handles = Vec::new();
     let (tx, rx) = mpsc::channel();
-    for device in Device::list()
-        .unwrap()
-        .into_iter()
-        .filter(|d| d.flags.connection_status == ConnectionStatus::Connected)
-        .filter(|d| !d.addresses.is_empty())
-        .filter(|d| !d.flags.is_loopback())
-    {
+
+    if let Some(file) = &args.pcap {
+        let file = file.clone();
         let tx = tx.clone();
-        let handle = std::thread::spawn(move || capture_device(device, tx));
+        let handle = std::thread::spawn(move || capture_file(file, tx));
         join_handles.push(handle);
+    } else {
+        for device in Device::list()
+            .unwrap()
+            .into_iter()
+            .filter(|d| d.flags.connection_status == ConnectionStatus::Connected)
+            .filter(|d| !d.addresses.is_empty())
+            .filter(|d| !d.flags.is_loopback())
+        {
+            let tx = tx.clone();
+            let handle = std::thread::spawn(move || capture_device(device, tx));
+            join_handles.push(handle);
+        }
     }
     drop(tx);
 
@@ -164,6 +184,18 @@ fn load_keys() -> Result<HashMap<u32, Vec<u8>>> {
     Ok(keys_bytes)
 }
 
+fn capture_file(file: PathBuf, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
+    let mut capture = pcap::Capture::from_file(file)?;
+
+    capture.filter(PACKET_FILTER, false)?;
+
+    while let Ok(packet) = capture.next_packet() {
+        tx.send(packet.data.to_vec())?;
+    }
+
+    Ok(())
+}
+
 fn capture_device(device: Device, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
     loop {
         let mut capture = pcap::Capture::from_device(device.clone())?
@@ -172,7 +204,7 @@ fn capture_device(device: Device, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
             .timeout(0)
             .open()?;
 
-        capture.filter("udp portrange 23301-23302", true).unwrap();
+        capture.filter(PACKET_FILTER, true).unwrap();
 
         println!("All ready~!");
 
