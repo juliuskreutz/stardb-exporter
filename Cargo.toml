@@ -7,6 +7,7 @@ edition = "2021"
 anyhow = "1.0.86"
 arboard = "3.4.0"
 base64 = "0.22.1"
+clap = { version = "4.5.8", features = ["derive"] }
 pcap = "2.0.0"
 reliquary = { git = "https://github.com/juliuskreutz/reliquary" }
 self_update = { version = "0.40.0", features = [
@@ -14,7 +15,7 @@ self_update = { version = "0.40.0", features = [
     "compression-zip-deflate",
 ] }
 serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
+serde_json = "1.0.120"
 ureq = { version = "2.9.7", features = ["json"] }
 
 [build-dependencies]
