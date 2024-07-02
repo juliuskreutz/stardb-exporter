@@ -189,6 +189,8 @@ fn capture_file(file: PathBuf, tx: mpsc::Sender<Vec<u8>>) -> Result<()> {
 
     capture.filter(PACKET_FILTER, false)?;
 
+    println!("Reding file~!");
+
     while let Ok(packet) = capture.next_packet() {
         tx.send(packet.data.to_vec())?;
     }
