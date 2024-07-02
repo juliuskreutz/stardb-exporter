@@ -18,3 +18,8 @@ This method will not work on any kind of VPN
 - Execute the exporter (You might need to do this as admin/root) and wait for it to say `All ready~!`.
 - Go into hyperspeed and it should copy the export to your clipboard.
 - Paste it [here](https://stardb.gg/import).
+
+If you already have an exported pcap file you can export from it as well
+```
+./stardb-exporter(.exe) --pcap path/to/file.pcap
+```
