@@ -1,6 +1,6 @@
 [package]
 name = "stardb-exporter"
-version = "1.0.5"
+version = "1.0.6"
 edition = "2021"
 
 [dependencies]
@@ -10,7 +10,7 @@ base64 = "0.22.1"
 clap = { version = "4.5.8", features = ["derive"] }
 pcap = "2.0.0"
 reliquary = { git = "https://github.com/juliuskreutz/reliquary" }
-self_update = { version = "0.40.0", features = [
+self_update = { version = "0.41.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
