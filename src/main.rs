@@ -3,10 +3,7 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use clap::Parser;
 use pcap::{ConnectionStatus, Device};
 use reliquary::network::{
-    gen::{
-        command_id,
-        proto::{GetBagScRsp::GetBagScRsp, GetQuestDataScRsp::GetQuestDataScRsp},
-    },
+    gen::{command_id, proto::GetQuestDataScRsp::GetQuestDataScRsp},
     GamePacket, GameSniffer,
 };
 use std::{collections::HashMap, io::Write, panic::catch_unwind, path::PathBuf, sync::mpsc};
@@ -21,7 +18,6 @@ struct Id {
 #[derive(serde::Serialize)]
 struct Export {
     achievements: Vec<u32>,
-    books: Vec<u32>,
 }
 
 #[derive(Parser)]
@@ -67,11 +63,6 @@ fn export(args: &Args) -> Result<()> {
         .into_json()?;
     let achievement_ids: Vec<_> = achievements.into_iter().map(|a| a.id).collect();
 
-    let books: Vec<Id> = ureq::get("https://stardb.gg/api/books")
-        .call()?
-        .into_json()?;
-    let book_ids: Vec<_> = books.into_iter().map(|a| a.id).collect();
-
     let keys = load_keys()?;
 
     let mut join_handles = Vec::new();
@@ -100,7 +91,6 @@ fn export(args: &Args) -> Result<()> {
     let mut sniffer = GameSniffer::new().set_initial_keys(keys);
 
     let mut achievements = Vec::new();
-    let mut books = Vec::new();
 
     while let Ok(data) = rx.recv() {
         let Some(GamePacket::Commands(commands)) = sniffer.receive_packet(data) else {
@@ -125,48 +115,28 @@ fn export(args: &Args) -> Result<()> {
                     }
                 }
             }
-
-            if command.command_id == command_id::GetBagScRsp {
-                if !books.is_empty() {
-                    continue;
-                }
-
-                println!("Got books packet");
-
-                if let Ok(bag) = command.parse_proto::<GetBagScRsp>() {
-                    for material in bag.material_list {
-                        if book_ids.contains(&material.tid) {
-                            books.push(material.tid);
-                        }
-                    }
-                }
-            }
         }
 
-        if !achievements.is_empty() && !books.is_empty() {
+        if !achievements.is_empty() {
             break;
         }
     }
 
-    if achievements.is_empty() && books.is_empty() {
-        return Err(anyhow::anyhow!("No achievements or books found"));
+    if achievements.is_empty() {
+        return Err(anyhow::anyhow!("No achievements found"));
     }
 
     println!("Copying to clipboard");
 
-    let export = Export {
-        achievements,
-        books,
-    };
+    let export = Export { achievements };
     let json = serde_json::to_string(&export)?;
 
     let mut clipboard = arboard::Clipboard::new()?;
     clipboard.set_text(json)?;
 
     println!(
-        "Copied {} achievements and {} books to clipboard",
+        "Copied {} achievements to clipboard",
         export.achievements.len(),
-        export.books.len()
     );
 
     Ok(())

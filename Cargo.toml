@@ -1,24 +1,19 @@
 [package]
 name = "stardb-exporter"
-version = "1.0.6"
+version = "1.0.7"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
 arboard = "3.4.0"
 base64 = "0.22.1"
-clap = { version = "4.5.11", features = ["derive"] }
+clap = { version = "4.5.14", features = ["derive"] }
 pcap = "2.0.0"
 reliquary = { git = "https://github.com/juliuskreutz/reliquary" }
 self_update = { version = "0.41.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = "1.0.121"
-ureq = { version = "2.10.0", features = ["json"] }
-
-[build-dependencies]
-anyhow = "1.0.86"
-ureq = "2.10.0"
-zip = "2.1.5"
+serde = { version = "1.0.205", features = ["derive"] }
+serde_json = "1.0.122"
+ureq = { version = "2.10.1", features = ["json"] }
