@@ -4,16 +4,16 @@ version = "1.0.7"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.86"
+anyhow = "1.0.87"
 arboard = "3.4.0"
 base64 = "0.22.1"
-clap = { version = "4.5.14", features = ["derive"] }
-pcap = "2.0.0"
+clap = { version = "4.5.17", features = ["derive"] }
+pcap = "2.2.0"
 reliquary = { git = "https://github.com/juliuskreutz/reliquary" }
 self_update = { version = "0.41.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
-serde = { version = "1.0.205", features = ["derive"] }
-serde_json = "1.0.122"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
 ureq = { version = "2.10.1", features = ["json"] }
