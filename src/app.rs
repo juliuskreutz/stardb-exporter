@@ -98,6 +98,8 @@ impl eframe::App for App {
                             ui.label(message);
                         }
                     });
+
+                    ui.hyperlink_to("Click here to import", "https://stardb.gg/import");
                 }
             }
         });
