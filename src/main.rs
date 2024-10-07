@@ -2,11 +2,14 @@
 
 mod app;
 mod games;
+mod themes;
+mod widgets;
 
 fn main() -> anyhow::Result<()> {
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([400.0, 300.0])
+            .with_min_inner_size([400.0, 300.0])
+            .with_decorations(false)
             .with_icon(eframe::icon_data::from_png_bytes(include_bytes!(
                 "../icon.png"
             ))?),
@@ -16,7 +19,7 @@ fn main() -> anyhow::Result<()> {
     eframe::run_native(
         "Stardb Exporter",
         native_options,
-        Box::new(|_| Ok(Box::new(app::App::default()))),
+        Box::new(|cc| Ok(Box::new(app::App::new(cc)))),
     )
     .map_err(|e| anyhow::anyhow!("{e}"))?;
 

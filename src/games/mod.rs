@@ -1,103 +1,79 @@
 mod gi;
 mod hsr;
+mod zzz;
 
 use std::{sync::mpsc, thread};
 
-#[derive(Default, Clone, Copy, PartialEq)]
+use crate::app::{Message, State};
+
+#[derive(Clone, Copy, PartialEq)]
 pub enum Game {
-    #[default]
     Hsr,
     Gi,
+    Zzz,
 }
 
 impl Game {
-    pub fn run(self) -> mpsc::Receiver<Option<String>> {
-        let (log_tx, log_rx) = mpsc::channel();
+    pub fn achievements(self, message_tx: &mpsc::Sender<Message>) {
+        let message_tx = message_tx.clone();
 
-        thread::spawn(move || -> anyhow::Result<()> {
-            log_tx.send(Some("Getting achievements from api".to_string()))?;
-
+        thread::spawn(move || {
             let achievement_ids = match self.achievement_ids() {
                 Ok(achievement_ids) => achievement_ids,
                 Err(e) => {
-                    log_tx.send(Some(format!("Error: {e}")))?;
-                    log_tx.send(None)?;
-                    return Ok(());
+                    message_tx.send(Message::Error(e.to_string())).unwrap();
+                    return;
                 }
             };
-
-            log_tx.send(Some(format!(
-                "Got {} achievements from api",
-                achievement_ids.len()
-            )))?;
 
             let devices = match self.devices() {
                 Ok(devices) => devices,
                 Err(e) => {
-                    log_tx.send(Some(format!("Error: {e}")))?;
-                    log_tx.send(None)?;
-                    return Ok(());
+                    message_tx.send(Message::Error(e.to_string())).unwrap();
+                    return;
                 }
             };
 
-            log_tx.send(Some(format!("Found {} network devices", devices.len())))?;
-
-            let mut join_handles = Vec::new();
             let (device_tx, device_rx) = mpsc::channel();
             for (i, device) in devices.into_iter().enumerate() {
                 let device_tx = device_tx.clone();
-                let log_tx = log_tx.clone();
-                let handle =
-                    std::thread::spawn(move || self.capture_device(i, device, &device_tx, &log_tx));
-                join_handles.push(handle);
+                let message_tx = message_tx.clone();
+                std::thread::spawn(move || self.capture_device(i, device, &device_tx, &message_tx));
             }
 
             let achievements = match self {
                 Game::Hsr => hsr::sniff(&achievement_ids, &device_rx),
                 Game::Gi => gi::sniff(&achievement_ids, &device_rx),
+                _ => unimplemented!(),
             };
             let achievements = match achievements {
                 Ok(achievements) => achievements,
                 Err(e) => {
-                    log_tx.send(Some(format!("Error: {e}")))?;
-                    log_tx.send(None)?;
-                    return Ok(());
+                    message_tx.send(Message::Error(e.to_string())).unwrap();
+                    return;
                 }
             };
 
-            let json = match self {
-                Game::Hsr => {
-                    serde_json::to_string(&serde_json::json!({"hsr_achievements": achievements}))?
-                }
-                Game::Gi => {
-                    serde_json::to_string(&serde_json::json!({"gi_achievements": achievements}))?
-                }
-            };
-
-            let mut clipboard = match arboard::Clipboard::new() {
-                Ok(clipboard) => clipboard,
-                Err(e) => {
-                    log_tx.send(Some(format!("Error: {e}")))?;
-                    log_tx.send(None)?;
-                    return Ok(());
-                }
-            };
-
-            if let Err(e) = clipboard.set_text(json) {
-                log_tx.send(Some(format!("Error: {e}")))?;
-            } else {
-                log_tx.send(Some(format!(
-                    "Copied {} achievements to clipboard",
-                    achievements.len()
-                )))?;
-            };
-
-            log_tx.send(None)?;
-
-            Ok(())
+            message_tx
+                .send(Message::Achievements(achievements))
+                .unwrap();
         });
+    }
 
-        log_rx
+    pub fn pulls(self, message_tx: &mpsc::Sender<Message>) {
+        let message_tx = message_tx.clone();
+
+        thread::spawn(move || {
+            match match self {
+                Game::Hsr => hsr::pulls(),
+                Game::Gi => gi::pulls(),
+                Game::Zzz => zzz::pulls(),
+            } {
+                Ok(pulls) => message_tx.send(Message::Pulls(pulls)),
+                Err(e) => message_tx.send(Message::Error(e.to_string())),
+            }
+            .unwrap()
+        });
     }
 
     fn achievement_ids(self) -> anyhow::Result<Vec<u32>> {
@@ -109,6 +85,7 @@ impl Game {
         let url = match self {
             Game::Hsr => "https://stardb.gg/api/achievements",
             Game::Gi => "https://stardb.gg/api/gi/achievements",
+            _ => unimplemented!(),
         };
 
         let achievements: Vec<Achievement> = ureq::get(url).call()?.into_json()?;
@@ -131,11 +108,12 @@ impl Game {
         i: usize,
         device: pcap::Device,
         device_tx: &mpsc::Sender<Vec<u8>>,
-        log_tx: &mpsc::Sender<Option<String>>,
+        message_tx: &mpsc::Sender<Message>,
     ) -> anyhow::Result<()> {
         let packet_filer = match self {
             Game::Hsr => "udp portrange 23301-23302",
             Game::Gi => "udp portrange 22101-22102",
+            _ => unimplemented!(),
         };
 
         loop {
@@ -147,7 +125,17 @@ impl Game {
 
             capture.filter(packet_filer, true)?;
 
-            log_tx.send(Some(format!("Device {i} ready~!")))?;
+            message_tx
+                .send(Message::Toast({
+                    let mut toast = egui_notify::Toast::success(format!("Device {i} Ready~!"));
+                    toast.duration(None);
+                    toast
+                }))
+                .unwrap();
+
+            message_tx
+                .send(Message::GoTo(State::Waiting("Running".to_string())))
+                .unwrap();
 
             let mut has_captured = false;
 
@@ -163,7 +151,15 @@ impl Game {
                 }
             }
 
-            log_tx.send(Some(format!("Device {i} Error. Starting up again...")))?;
+            message_tx
+                .send(Message::Toast({
+                    let mut toast = egui_notify::Toast::error(format!(
+                        "Device {i} Error. Starting up again..."
+                    ));
+                    toast.duration(None);
+                    toast
+                }))
+                .unwrap();
         }
     }
 }
