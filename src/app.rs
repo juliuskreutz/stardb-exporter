@@ -7,6 +7,7 @@ pub enum State {
     Menu,
     Login,
     Waiting(String),
+    PullMenu,
     Game,
     Achievements(Vec<u32>),
     Pulls(String),
@@ -20,7 +21,6 @@ pub enum Message {
     Error(String),
     Toast(egui_notify::Toast),
     Achievements(Vec<u32>),
-    Pulls(String),
 }
 
 pub struct App {
@@ -122,7 +122,6 @@ impl App {
             Message::Toast(toast) => {
                 self.toasts.add(toast);
             }
-            Message::Pulls(url) => self.state = State::Pulls(url),
         }
     }
 }
@@ -343,8 +342,7 @@ impl eframe::App for App {
                             }
 
                             if ui.button("Warp Exporter").clicked() {
-                                self.game.pulls(&self.message_tx);
-                                self.state = State::Waiting("Running".to_string());
+                                self.state = State::PullMenu;
                             }
                         }
                         games::Game::Gi => {
@@ -356,16 +354,14 @@ impl eframe::App for App {
                             }
 
                             if ui.button("Wish Exporter").clicked() {
-                                self.game.pulls(&self.message_tx);
-                                self.state = State::Waiting("Running".to_string());
+                                self.state = State::PullMenu;
                             }
                         }
                         games::Game::Zzz => {
                             ui.heading("ZZZ");
 
                             if ui.button("Signal Exporter").clicked() {
-                                self.game.pulls(&self.message_tx);
-                                self.state = State::Waiting("Running".to_string());
+                                self.state = State::PullMenu;
                             }
                         }
                     }
@@ -396,7 +392,77 @@ impl eframe::App for App {
                     ui.hyperlink_to("Click here to import", import_url);
 
                     if ui.button("Sync to stardb").clicked() {
-                        self.toasts.info("Not yet implemented");
+                        let import_url = match self.game {
+                            games::Game::Hsr => "https://stardb.gg/api/warps-import",
+                            games::Game::Gi => "https://stardb.gg/api/gi/wishes-import",
+                            games::Game::Zzz => "https://stardb.gg/api/zzz/signals-import",
+                        };
+
+                        let request = if let Some(user) = &self.user {
+                            ureq::post(import_url).set("Cookie", &user.id)
+                        } else {
+                            ureq::post(import_url)
+                        };
+
+                        match request.send_json(serde_json::json!({"url": url})) {
+                            Ok(r) => {
+                                self.toasts.success(format!(
+                                    "Synced uid {}",
+                                    r.into_json::<serde_json::Value>().unwrap()["uid"]
+                                ));
+                            }
+                            Err(e) => {
+                                self.toasts.error(format!("Error: {e}"));
+                            }
+                        }
+                    }
+                }
+                State::PullMenu => {
+                    if ui.button("Menu").clicked() {
+                        self.state = State::Menu;
+                    }
+
+                    match self.game {
+                        games::Game::Hsr => {
+                            ui.heading("HSR - Warp Exporter");
+                        }
+                        games::Game::Gi => {
+                            ui.heading("GI - Wish Exporter");
+                        }
+                        games::Game::Zzz => {
+                            ui.heading("ZZZ - Signal Exporter");
+                        }
+                    }
+
+                    if ui.button("Automatic").clicked() {
+                        {
+                            let game = self.game;
+                            let message_tx = self.message_tx.clone();
+
+                            thread::spawn(move || match game.pulls() {
+                                Ok(pulls) => message_tx.send(Message::GoTo(State::Pulls(pulls))),
+                                Err(e) => message_tx.send(Message::Error(e.to_string())),
+                            });
+                        }
+
+                        self.state = State::Waiting("Running".to_string());
+                    }
+
+                    if ui.button("Manual (Select data_2 file)").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            {
+                                let message_tx = self.message_tx.clone();
+
+                                thread::spawn(move || match games::pulls_from_data_2(&path) {
+                                    Ok(pulls) => {
+                                        message_tx.send(Message::GoTo(State::Pulls(pulls)))
+                                    }
+                                    Err(e) => message_tx.send(Message::Error(e.to_string())),
+                                });
+                            }
+
+                            self.state = State::Waiting("Running".to_string());
+                        }
                     }
                 }
             }
@@ -412,7 +478,7 @@ fn login(username: &str, password: &str, message_tx: &mpsc::Sender<Message>) {
     let message_tx = message_tx.clone();
 
     thread::spawn(move || {
-        let json = ureq::json!({
+        let json = serde_json::json!({
             "username": username,
             "password": password
         });
