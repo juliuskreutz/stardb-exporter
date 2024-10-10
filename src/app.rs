@@ -1,4 +1,4 @@
-use std::{sync::mpsc, thread};
+use std::{path::PathBuf, sync::mpsc, thread};
 
 use crate::{games, themes, widgets};
 
@@ -24,21 +24,29 @@ pub enum Message {
 }
 
 pub struct App {
-    theme: themes::Theme,
     message_tx: mpsc::Sender<Message>,
     message_rx: mpsc::Receiver<Message>,
     state: State,
     game: games::Game,
     username: String,
     password: String,
-    user: Option<User>,
     toasts: egui_notify::Toasts,
+    theme: themes::Theme,
+    user: Option<User>,
+    paths: Paths,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct User {
     id: String,
     username: String,
+}
+
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+pub struct Paths {
+    zzz: Option<PathBuf>,
+    hsr: Option<PathBuf>,
+    gi: Option<PathBuf>,
 }
 
 impl App {
@@ -69,15 +77,18 @@ impl App {
 
         cc.egui_ctx.set_fonts(fonts);
 
-        let user = if let Some(storage) = cc.storage {
-            eframe::get_value(storage, "user").unwrap_or_default()
-        } else {
-            None
-        };
-
         let theme: themes::Theme = cc
             .storage
             .and_then(|s| eframe::get_value(s, "theme"))
+            .unwrap_or_default();
+
+        let user: Option<User> = cc
+            .storage
+            .and_then(|s| eframe::get_value(s, "user").unwrap_or_default());
+
+        let paths: Paths = cc
+            .storage
+            .and_then(|s| eframe::get_value(s, "paths"))
             .unwrap_or_default();
 
         cc.egui_ctx.set_style(theme.style());
@@ -87,15 +98,16 @@ impl App {
         update(&message_tx);
 
         Self {
-            theme,
             message_tx,
             message_rx,
             state: State::Waiting("Updating".to_string()),
             game: games::Game::Hsr,
             username: String::new(),
             password: String::new(),
-            user,
             toasts: egui_notify::Toasts::default().with_anchor(egui_notify::Anchor::BottomRight),
+            theme,
+            user,
+            paths,
         }
     }
 
@@ -130,6 +142,7 @@ impl eframe::App for App {
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, "user", &self.user);
         eframe::set_value(storage, "theme", &self.theme);
+        eframe::set_value(storage, "paths", &self.paths);
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -425,44 +438,86 @@ impl eframe::App for App {
                     match self.game {
                         games::Game::Hsr => {
                             ui.heading("HSR - Warp Exporter");
+                            ui.label(format!(
+                                "Path: {}",
+                                self.paths
+                                    .hsr
+                                    .as_ref()
+                                    .map(|p| p.display().to_string())
+                                    .unwrap_or("None".to_string())
+                            ));
                         }
                         games::Game::Gi => {
                             ui.heading("GI - Wish Exporter");
+                            ui.label(format!(
+                                "Path: {}",
+                                self.paths
+                                    .gi
+                                    .as_ref()
+                                    .map(|p| p.display().to_string())
+                                    .unwrap_or("None".to_string())
+                            ));
                         }
                         games::Game::Zzz => {
                             ui.heading("ZZZ - Signal Exporter");
+                            ui.label(format!(
+                                "Path: {}",
+                                self.paths
+                                    .zzz
+                                    .as_ref()
+                                    .map(|p| p.display().to_string())
+                                    .unwrap_or("None".to_string())
+                            ));
                         }
                     }
 
                     if ui.button("Automatic").clicked() {
-                        {
-                            let game = self.game;
-                            let message_tx = self.message_tx.clone();
-
-                            thread::spawn(move || match game.pulls() {
-                                Ok(pulls) => message_tx.send(Message::GoTo(State::Pulls(pulls))),
-                                Err(e) => message_tx.send(Message::Error(e.to_string())),
-                            });
+                        match self.game.game_path() {
+                            Ok(path) => match self.game {
+                                games::Game::Hsr => self.paths.hsr = Some(path),
+                                games::Game::Gi => self.paths.gi = Some(path),
+                                games::Game::Zzz => self.paths.zzz = Some(path),
+                            },
+                            Err(e) => self.message_tx.send(Message::Error(e.to_string())).unwrap(),
                         }
-
-                        self.state = State::Waiting("Running".to_string());
                     }
 
-                    if ui.button("Manual (Select data_2 file)").clicked() {
-                        if let Some(path) = rfd::FileDialog::new().pick_file() {
-                            {
-                                let message_tx = self.message_tx.clone();
-
-                                thread::spawn(move || match games::pulls_from_data_2(&path) {
-                                    Ok(pulls) => {
-                                        message_tx.send(Message::GoTo(State::Pulls(pulls)))
-                                    }
-                                    Err(e) => message_tx.send(Message::Error(e.to_string())),
-                                });
+                    if ui
+                        .button("Manual selection (e.g. D:\\Star Rail\\Games\\StarRail_Data)")
+                        .clicked()
+                    {
+                        if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                            match self.game {
+                                games::Game::Hsr => self.paths.hsr = Some(path),
+                                games::Game::Gi => self.paths.gi = Some(path),
+                                games::Game::Zzz => self.paths.zzz = Some(path),
                             }
+                        }
+                    }
+
+                    if let Some(path) = match self.game {
+                        games::Game::Hsr => &self.paths.hsr,
+                        games::Game::Gi => &self.paths.gi,
+                        games::Game::Zzz => &self.paths.zzz,
+                    } {
+                        if ui.button("Get Url").clicked() {
+                            let message_tx = self.message_tx.clone();
+                            let path = path.clone();
+
+                            thread::spawn(move || {
+                                match games::pulls_from_game_path(&path) {
+                                    Ok(url) => message_tx.send(Message::GoTo(State::Pulls(url))),
+                                    Err(e) => {
+                                        message_tx.send(Message::GoTo(State::Error(e.to_string())))
+                                    }
+                                }
+                                .unwrap()
+                            });
 
                             self.state = State::Waiting("Running".to_string());
                         }
+                    } else {
+                        ui.add_enabled(false, egui::Button::new("Get Url"));
                     }
                 }
             }
