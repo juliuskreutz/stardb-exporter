@@ -30,9 +30,11 @@ pub fn game_path() -> anyhow::Result<PathBuf> {
         };
 
         if let Some(line) = line.strip_prefix("[Subsystems] Discovering subsystems at path ") {
-            let game_path = line.strip_suffix("/UnitySubsystems").unwrap();
+            let mut path = PathBuf::from(line);
 
-            return Ok(PathBuf::from(game_path));
+            path.pop();
+
+            return Ok(path);
         }
     }
 
