@@ -361,7 +361,10 @@ impl eframe::App for App {
                         games::Game::Gi => {
                             ui.heading("GI");
 
-                            if ui.button("Achievement Exporter").clicked() {
+                            if ui
+                                .add_enabled(false, egui::Button::new("Achievement Exporter"))
+                                .clicked()
+                            {
                                 self.game.achievements(&self.message_tx);
                                 self.state = State::Waiting("Preparing".to_string());
                             }
