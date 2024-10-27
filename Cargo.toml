@@ -1,12 +1,12 @@
 [package]
 name = "stardb-exporter"
-version = "2.1.2"
+version = "2.2.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.89"
+anyhow = "1.0.91"
 arboard = "3.4.1"
-artifactarium = { git = "https://github.com/juliuskreutz/artifactarium" }
+# artifactarium = { git = "https://github.com/juliuskreutz/artifactarium" }
 base64 = "0.22.1"
 eframe = { version = "0.29.1", default-features = false, features = [
     "default_fonts",
@@ -14,17 +14,17 @@ eframe = { version = "0.29.1", default-features = false, features = [
     "persistence",
 ] }
 egui = "0.29.1"
-egui-notify = "0.16.0"
+egui-notify = "0.17.0"
 pcap = "2.2.0"
-regex = "1.11.0"
+regex = "1.11.1"
 reliquary = { git = "https://github.com/juliuskreutz/reliquary" }
 rfd = "0.15.0"
 self_update = { version = "0.41.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
-serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1.0.128"
+serde = { version = "1.0.213", features = ["derive"] }
+serde_json = "1.0.132"
 ureq = { version = "2.10.1", features = ["json"] }
 
 [build-dependencies]
