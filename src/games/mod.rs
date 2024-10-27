@@ -49,7 +49,7 @@ impl Game {
 
             let achievements = match self {
                 Game::Hsr => hsr::sniff(&achievement_ids, &device_rx),
-                Game::Gi => gi::sniff(&achievement_ids, &device_rx),
+                // Game::Gi => gi::sniff(&achievement_ids, &device_rx),
                 _ => unimplemented!(),
             };
             let achievements = match achievements {

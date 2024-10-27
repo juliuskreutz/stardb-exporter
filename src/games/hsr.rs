@@ -7,10 +7,7 @@ use std::{
 };
 
 use base64::prelude::*;
-use reliquary::network::{
-    gen::{command_id, proto::GetQuestDataScRsp::GetQuestDataScRsp},
-    GamePacket, GameSniffer,
-};
+use reliquary::{command_id, gen::protos::GetQuestDataScRsp, GamePacket, GameSniffer};
 
 pub fn sniff(
     achievement_ids: &[u32],
@@ -28,7 +25,7 @@ pub fn sniff(
         };
 
         for command in commands {
-            if command.command_id == command_id::GetQuestDataScRsp {
+            if command.command_id == command_id::GET_QUEST_DATA_SC_RSP {
                 if !achievements.is_empty() {
                     continue;
                 }
