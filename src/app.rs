@@ -55,12 +55,16 @@ impl App {
 
         fonts.font_data.insert(
             "JetBrainsMonoNerdFont".to_string(),
-            egui::FontData::from_static(include_bytes!("../JetBrainsMonoNerdFont-Regular.ttf")),
+            egui::FontData::from_static(include_bytes!(
+                "../fonts/JetBrainsMonoNerdFont-Regular.ttf"
+            )),
         );
 
         fonts.font_data.insert(
             "JetBrainsMonoNerdFontMono".to_string(),
-            egui::FontData::from_static(include_bytes!("../JetBrainsMonoNerdFontMono-Regular.ttf")),
+            egui::FontData::from_static(include_bytes!(
+                "../fonts/JetBrainsMonoNerdFontMono-Regular.ttf"
+            )),
         );
 
         fonts
@@ -361,10 +365,7 @@ impl eframe::App for App {
                         games::Game::Gi => {
                             ui.heading("GI");
 
-                            if ui
-                                .add_enabled(false, egui::Button::new("Achievement Exporter"))
-                                .clicked()
-                            {
+                            if ui.button("Achievement Exporter").clicked() {
                                 self.game.achievements(&self.message_tx);
                                 self.state = State::Waiting("Preparing".to_string());
                             }

@@ -1,21 +1,17 @@
 use std::{
-    // collections::HashMap,
+    collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
     path::PathBuf,
-    // sync::mpsc,
+    sync::mpsc,
 };
 
-/*
-use artifactarium::network::{
-    gen::{command_id, proto::AchievementAllDataNotify::AchievementAllDataNotify},
-    GamePacket, GameSniffer,
-};
+use artifactarium::{command_id, gen::protos::AchievementAllDataNotify, GamePacket, GameSniffer};
 use base64::prelude::*;
-*/
+
 use regex::Regex;
 
-/* pub fn sniff(
+pub fn sniff(
     achievement_ids: &[u32],
     device_rx: &mpsc::Receiver<Vec<u8>>,
 ) -> anyhow::Result<Vec<u32>> {
@@ -30,7 +26,7 @@ use regex::Regex;
         };
 
         for command in commands {
-            if command.command_id == command_id::AchievementAllDataNotify {
+            if command.command_id == command_id::ACHIEVEMENT_ALL_DATA_NOTIFY {
                 if !achievements.is_empty() {
                     continue;
                 }
@@ -60,7 +56,7 @@ use regex::Regex;
 }
 
 fn load_keys() -> anyhow::Result<HashMap<u16, Vec<u8>>> {
-    let keys: HashMap<u16, String> = serde_json::from_slice(include_bytes!("../../gi_keys.json"))?;
+    let keys: HashMap<u16, String> = serde_json::from_slice(include_bytes!("../../keys/gi.json"))?;
 
     let mut keys_bytes = HashMap::new();
 
@@ -69,7 +65,7 @@ fn load_keys() -> anyhow::Result<HashMap<u16, Vec<u8>>> {
     }
 
     Ok(keys_bytes)
-} */
+}
 
 pub fn game_path() -> anyhow::Result<PathBuf> {
     let mut log_path = PathBuf::from(&std::env::var("APPDATA")?);

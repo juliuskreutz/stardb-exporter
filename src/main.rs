@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
             .with_min_inner_size([400.0, 300.0])
             .with_decorations(false)
             .with_icon(eframe::icon_data::from_png_bytes(include_bytes!(
-                "../icon.png"
+                "../icons/icon.png"
             ))?),
         centered: true,
         ..Default::default()

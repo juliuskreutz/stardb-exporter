@@ -55,7 +55,7 @@ pub fn sniff(
 }
 
 fn load_keys() -> anyhow::Result<HashMap<u32, Vec<u8>>> {
-    let keys: HashMap<u32, String> = serde_json::from_slice(include_bytes!("../../hsr_keys.json"))?;
+    let keys: HashMap<u32, String> = serde_json::from_slice(include_bytes!("../../keys/hsr.json"))?;
 
     let mut keys_bytes = HashMap::new();
 
