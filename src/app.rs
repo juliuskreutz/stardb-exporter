@@ -122,6 +122,9 @@ impl App {
                 if let Some(status) = status {
                     if status.updated() {
                         self.state = State::OutOfDate(status);
+
+                        let program_name = std::env::args().next().unwrap();
+                        std::process::Command::new(program_name).spawn().unwrap();
                     } else {
                         self.state = State::Menu;
                     }
@@ -193,8 +196,6 @@ impl eframe::App for App {
                         ))
                     });
 
-                    let program_name = std::env::args().next().unwrap();
-                    std::process::Command::new(program_name).spawn().unwrap();
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
                 State::Login => {
