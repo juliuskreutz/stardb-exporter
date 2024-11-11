@@ -1,6 +1,6 @@
 use std::{path::PathBuf, sync::mpsc, thread};
 
-use crate::{games, themes, widgets};
+use crate::{games, themes, ui, widgets};
 
 pub enum State {
     OutOfDate(self_update::Status),
@@ -157,16 +157,18 @@ impl eframe::App for App {
             self.message(message);
         }
 
-        egui::TopBottomPanel::top("panel")
-            .frame(
-                egui::Frame::none()
-                    .fill(ctx.style().visuals.window_fill)
-                    .inner_margin(egui::Margin::ZERO),
-            )
-            .show_separator_line(false)
-            .show(ctx, |ui| {
-                ui.add(widgets::Decorations);
-            });
+        ui::decorations(ctx);
+
+        /*egui::TopBottomPanel::top("panel")
+        .frame(
+            egui::Frame::none()
+                .fill(ctx.style().visuals.window_fill)
+                .inner_margin(egui::Margin::ZERO),
+        )
+        .show_separator_line(false)
+        .show(ctx, |ui| {
+            ui.add(widgets::Decorations);
+        });*/
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {

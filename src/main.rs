@@ -3,6 +3,7 @@
 mod app;
 mod games;
 mod themes;
+mod ui;
 mod widgets;
 
 fn main() -> anyhow::Result<()> {
