@@ -570,6 +570,7 @@ fn login(username: &str, password: &str, message_tx: &mpsc::Sender<Message>) {
     });
 }
 
+#[cfg(not(debug_assertions))]
 fn update(message_tx: &mpsc::Sender<Message>) {
     let message_tx = message_tx.clone();
 
@@ -586,4 +587,9 @@ fn update(message_tx: &mpsc::Sender<Message>) {
 
         message_tx.send(Message::Updated(status)).unwrap();
     });
+}
+
+#[cfg(debug_assertions)]
+fn update(message_tx: &mpsc::Sender<Message>) {
+    message_tx.send(Message::GoTo(State::Menu)).unwrap();
 }
