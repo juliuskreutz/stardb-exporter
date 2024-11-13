@@ -4,7 +4,7 @@ version = "2.3.1"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.92"
+anyhow = "1.0.93"
 arboard = "3.4.1"
 artifactarium = { git = "https://github.com/juliuskreutz/artifactarium" }
 base64 = "0.22.1"
@@ -24,7 +24,7 @@ self_update = { version = "0.41.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.132"
 ureq = { version = "2.10.1", features = ["json"] }
 
