@@ -4,7 +4,6 @@ mod app;
 mod games;
 mod themes;
 mod ui;
-mod widgets;
 
 fn main() -> anyhow::Result<()> {
     let native_options = eframe::NativeOptions {
@@ -17,6 +16,7 @@ fn main() -> anyhow::Result<()> {
         centered: true,
         ..Default::default()
     };
+
     eframe::run_native(
         "Stardb Exporter",
         native_options,

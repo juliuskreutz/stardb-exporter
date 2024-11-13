@@ -1,8 +1,9 @@
 use std::{path::PathBuf, sync::mpsc, thread};
 
-use crate::{games, themes, ui, widgets};
+use crate::{games, themes, ui};
 
 pub enum State {
+    #[cfg(not(debug_assertions))]
     OutOfDate(self_update::Status),
     Menu,
     Login,
@@ -16,6 +17,7 @@ pub enum State {
 
 pub enum Message {
     GoTo(State),
+    #[cfg(not(debug_assertions))]
     Updated(Option<self_update::Status>),
     LoggedIn(User),
     Error(String),
@@ -51,6 +53,8 @@ pub struct Paths {
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        egui_extras::install_image_loaders(&cc.egui_ctx);
+
         let mut fonts = egui::FontDefinitions::default();
 
         fonts.font_data.insert(
@@ -118,6 +122,7 @@ impl App {
     fn message(&mut self, message: Message) {
         match message {
             Message::GoTo(state) => self.state = state,
+            #[cfg(not(debug_assertions))]
             Message::Updated(status) => {
                 if let Some(status) = status {
                     if status.updated() {
@@ -157,31 +162,87 @@ impl eframe::App for App {
             self.message(message);
         }
 
+        ctx.set_style(self.theme.style());
+
         ui::decorations(ctx);
 
-        /*egui::TopBottomPanel::top("panel")
-        .frame(
-            egui::Frame::none()
-                .fill(ctx.style().visuals.window_fill)
-                .inner_margin(egui::Margin::ZERO),
-        )
-        .show_separator_line(false)
-        .show(ctx, |ui| {
-            ui.add(widgets::Decorations);
-        });*/
-
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                if ui.button("Cycle Theme").clicked() {
-                    match self.theme {
-                        themes::Theme::Dark => self.theme = themes::Theme::Light,
-                        themes::Theme::Light => self.theme = themes::Theme::Classic,
-                        themes::Theme::Classic => self.theme = themes::Theme::Dark,
+            ui.horizontal(|ui| {
+                ui.set_height(48.0);
+
+                ui.add_space(32.0);
+
+                let waiting = matches!(self.state, State::Waiting(_));
+
+                let heading = ui.add_enabled(
+                    !waiting,
+                    egui::Label::new(egui::RichText::new("󱞴 Menu").heading()),
+                );
+
+                if heading.hovered() {
+                    ctx.set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+                if heading.clicked() {
+                    self.message_tx.send(Message::GoTo(State::Menu)).unwrap();
+                }
+
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.add_space(32.0);
+
+                    let login_text = self
+                        .user
+                        .as_ref()
+                        .map(|u| u.username.as_str())
+                        .unwrap_or("Login");
+
+                    let login_button = ui.add_enabled(!waiting, egui::Button::new(login_text));
+                    if login_button.clicked() {
+                        self.message_tx.send(Message::GoTo(State::Login)).unwrap();
                     }
 
-                    ctx.set_style(self.theme.style());
-                }
+                    let height = login_button.rect.height();
+
+                    ui.style_mut().spacing.button_padding = egui::vec2(0.0, 0.0);
+                    let button = egui::Button::new(
+                        egui::RichText::new("").font(egui::FontId::monospace(24.0)),
+                    );
+                    let button = button.min_size(egui::vec2(48.0, height));
+
+                    let color_button = ui.add(button);
+                    let popup_id = color_button.id.with("popup");
+
+                    let is_popup_open = ui.memory(|m| m.is_popup_open(popup_id));
+
+                    if is_popup_open {
+                        egui::popup::popup_above_or_below_widget(
+                            ui,
+                            popup_id,
+                            &color_button,
+                            egui::AboveOrBelow::Below,
+                            egui::PopupCloseBehavior::CloseOnClick,
+                            |ui| {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.visuals_mut().widgets.inactive.bg_stroke.color =
+                                    ui.visuals().widgets.active.bg_stroke.color;
+
+                                ui.selectable_value(&mut self.theme, themes::Theme::Dark, "Dark");
+                                ui.selectable_value(&mut self.theme, themes::Theme::Light, "Light");
+                                ui.selectable_value(
+                                    &mut self.theme,
+                                    themes::Theme::Classic,
+                                    "Classic",
+                                );
+                            },
+                        );
+                    }
+
+                    if color_button.clicked() {
+                        ui.memory_mut(|mem| mem.toggle_popup(popup_id));
+                    }
+                });
             });
+
+            ui.separator();
 
             match &self.state {
                 State::Waiting(s) => {
@@ -190,6 +251,7 @@ impl eframe::App for App {
                         ui.add(egui::Spinner::new().color(ui.visuals().text_color()))
                     });
                 }
+                #[cfg(not(debug_assertions))]
                 State::OutOfDate(status) => {
                     ui.horizontal(|ui| {
                         ui.label(format!(
@@ -201,10 +263,6 @@ impl eframe::App for App {
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
                 State::Login => {
-                    if ui.button("Menu").clicked() {
-                        self.state = State::Menu;
-                    }
-
                     ui.label("Username:");
                     ui.text_edit_singleline(&mut self.username);
 
@@ -213,30 +271,16 @@ impl eframe::App for App {
 
                     if ui.button("Login").clicked() {
                         login(&self.username, &self.password, &self.message_tx);
-                        self.state = State::Waiting("Logging In".to_string());
+
+                        self.username.clear();
+                        self.password.clear();
+
+                        self.message_tx
+                            .send(Message::GoTo(State::Waiting("Loggin In".to_string())))
+                            .unwrap();
                     }
                 }
                 State::Menu => {
-                    if let Some(user) = &self.user {
-                        ui.label(format!("Hi {}", user.username));
-
-                        if ui.button("Logout").clicked() {
-                            {
-                                let id = user.id.clone();
-                                thread::spawn(move || {
-                                    let _ = ureq::post("https://stardb.gg/api/users/auth/logout")
-                                        .set("Cookie", &id);
-                                });
-                            }
-
-                            self.user = None;
-                        }
-                    } else if ui.button("Login").clicked() {
-                        self.state = State::Login;
-                    }
-
-                    ui.add_space(10.0);
-
                     if ui.button("Honkai: Star Rail").clicked() {
                         self.game = games::Game::Hsr;
                         self.state = State::Game;
@@ -341,51 +385,41 @@ impl eframe::App for App {
                     }
                 }
                 State::Error(e) => {
-                    if ui.button("Menu").clicked() {
-                        self.message_tx.send(Message::GoTo(State::Menu)).unwrap();
-                    }
-
                     ui.label(format!("Error: {e}"));
                 }
-                State::Game => {
-                    if ui.button("Menu").clicked() {
-                        self.state = State::Menu;
-                    }
+                State::Game => match self.game {
+                    games::Game::Hsr => {
+                        ui.heading("HSR");
 
-                    match self.game {
-                        games::Game::Hsr => {
-                            ui.heading("HSR");
-
-                            if ui.button("Achievement Exporter").clicked() {
-                                self.game.achievements(&self.message_tx);
-                                self.state = State::Waiting("Preparing".to_string());
-                            }
-
-                            if ui.button("Warp Exporter").clicked() {
-                                self.state = State::PullMenu;
-                            }
+                        if ui.button("Achievement Exporter").clicked() {
+                            self.game.achievements(&self.message_tx);
+                            self.state = State::Waiting("Preparing".to_string());
                         }
-                        games::Game::Gi => {
-                            ui.heading("GI");
 
-                            if ui.button("Achievement Exporter").clicked() {
-                                self.game.achievements(&self.message_tx);
-                                self.state = State::Waiting("Preparing".to_string());
-                            }
-
-                            if ui.button("Wish Exporter").clicked() {
-                                self.state = State::PullMenu;
-                            }
-                        }
-                        games::Game::Zzz => {
-                            ui.heading("ZZZ");
-
-                            if ui.button("Signal Exporter").clicked() {
-                                self.state = State::PullMenu;
-                            }
+                        if ui.button("Warp Exporter").clicked() {
+                            self.state = State::PullMenu;
                         }
                     }
-                }
+                    games::Game::Gi => {
+                        ui.heading("GI");
+
+                        if ui.button("Achievement Exporter").clicked() {
+                            self.game.achievements(&self.message_tx);
+                            self.state = State::Waiting("Preparing".to_string());
+                        }
+
+                        if ui.button("Wish Exporter").clicked() {
+                            self.state = State::PullMenu;
+                        }
+                    }
+                    games::Game::Zzz => {
+                        ui.heading("ZZZ");
+
+                        if ui.button("Signal Exporter").clicked() {
+                            self.state = State::PullMenu;
+                        }
+                    }
+                },
                 State::Pulls(url) => {
                     if ui.button("Menu").clicked() {
                         self.message_tx.send(Message::GoTo(State::Menu)).unwrap();
