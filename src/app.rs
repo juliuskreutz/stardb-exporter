@@ -297,10 +297,6 @@ impl eframe::App for App {
                     }
                 }
                 State::Achievements(achievements) => {
-                    if ui.button("Menu").clicked() {
-                        self.message_tx.send(Message::GoTo(State::Menu)).unwrap();
-                    }
-
                     let key = match self.game {
                         games::Game::Hsr => {
                             ui.heading("HSR");
@@ -421,10 +417,6 @@ impl eframe::App for App {
                     }
                 },
                 State::Pulls(url) => {
-                    if ui.button("Menu").clicked() {
-                        self.message_tx.send(Message::GoTo(State::Menu)).unwrap();
-                    }
-
                     ui.label("Finished");
 
                     if ui.button("Copy url to clipboard").clicked() {
@@ -472,10 +464,6 @@ impl eframe::App for App {
                     }
                 }
                 State::PullMenu => {
-                    if ui.button("Menu").clicked() {
-                        self.state = State::Menu;
-                    }
-
                     match self.game {
                         games::Game::Hsr => {
                             ui.heading("HSR - Warp Exporter");
