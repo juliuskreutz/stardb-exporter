@@ -516,9 +516,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aeb932158bd710538c73702db6945cb68a8fb08c519e6e12706b94263b36db8"
+checksum = "fd9de9f2205d5ef3fd67e685b0df337994ddd4495e2a28d185500d0e1edfea47"
 dependencies = [
  "jobserver",
  "libc",
@@ -911,6 +911,15 @@ name = "egui-notify"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62066bd16c2abea2b77b8c47411617b22c3ae7d3afb8996a5ce05224bfe57953"
+dependencies = [
+ "egui",
+]
+
+[[package]]
+name = "egui-remixicon"
+version = "0.29.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a463c133d92f2ea65465464437aeb3ebd134a5e583379c5f73121727dd0e2d6"
 dependencies = [
  "egui",
 ]
@@ -3359,7 +3368,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "stardb-exporter"
-version = "2.4.0"
+version = "2.4.1"
 dependencies = [
  "anyhow",
  "arboard",
@@ -3369,6 +3378,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui-notify",
+ "egui-remixicon",
  "egui_extras",
  "pcap",
  "regex",

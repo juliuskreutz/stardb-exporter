@@ -1,5 +1,7 @@
 use std::{path::PathBuf, sync::mpsc, thread};
 
+use egui_remixicon::icons;
+
 use crate::{games, themes, ui};
 
 pub enum State {
@@ -56,32 +58,18 @@ impl App {
         egui_extras::install_image_loaders(&cc.egui_ctx);
 
         let mut fonts = egui::FontDefinitions::default();
+        egui_remixicon::add_to_fonts(&mut fonts);
 
         fonts.font_data.insert(
-            "JetBrainsMonoNerdFont".to_string(),
-            egui::FontData::from_static(include_bytes!(
-                "../fonts/JetBrainsMonoNerdFont-Regular.ttf"
-            )),
-        );
-
-        fonts.font_data.insert(
-            "JetBrainsMonoNerdFontMono".to_string(),
-            egui::FontData::from_static(include_bytes!(
-                "../fonts/JetBrainsMonoNerdFontMono-Regular.ttf"
-            )),
+            "Inter".to_string(),
+            egui::FontData::from_static(include_bytes!("../fonts/Inter.ttf")),
         );
 
         fonts
             .families
             .entry(egui::FontFamily::Proportional)
             .or_default()
-            .insert(0, "JetBrainsMonoNerdFont".to_string());
-
-        fonts
-            .families
-            .entry(egui::FontFamily::Monospace)
-            .or_default()
-            .insert(0, "JetBrainsMonoNerdFontMono".to_string());
+            .insert(0, "Inter".to_string());
 
         cc.egui_ctx.set_fonts(fonts);
 
@@ -176,7 +164,10 @@ impl eframe::App for App {
 
                 let heading = ui.add_enabled(
                     !waiting,
-                    egui::Label::new(egui::RichText::new("󱞴 Menu").heading()),
+                    egui::Label::new(
+                        egui::RichText::new(format!("{} Menu", icons::ARROW_LEFT_UP_LINE))
+                            .heading(),
+                    ),
                 );
 
                 if heading.hovered() {
@@ -204,7 +195,7 @@ impl eframe::App for App {
 
                     ui.style_mut().spacing.button_padding = egui::vec2(0.0, 0.0);
                     let button = egui::Button::new(
-                        egui::RichText::new("").font(egui::FontId::monospace(24.0)),
+                        egui::RichText::new(egui_remixicon::icons::PALETTE_LINE).size(20.0),
                     );
                     let button = button.min_size(egui::vec2(48.0, height));
 
@@ -225,12 +216,40 @@ impl eframe::App for App {
                                 ui.visuals_mut().widgets.inactive.bg_stroke.color =
                                     ui.visuals().widgets.active.bg_stroke.color;
 
-                                ui.selectable_value(&mut self.theme, themes::Theme::Dark, "Dark");
-                                ui.selectable_value(&mut self.theme, themes::Theme::Light, "Light");
+                                let mut icon_format = egui::TextFormat::simple(
+                                    egui::FontId::proportional(16.0),
+                                    ui.visuals().text_color(),
+                                );
+                                icon_format.valign = egui::Align::Center;
+
+                                let mut text_format = egui::TextFormat::simple(
+                                    egui::FontId::proportional(12.0),
+                                    ui.visuals().text_color(),
+                                );
+                                text_format.valign = egui::Align::Center;
+
+                                let mut dark_job = egui::text::LayoutJob::default();
+                                dark_job.append(icons::MOON_LINE, 0.0, icon_format.clone());
+                                dark_job.append("Dark", 8.0, text_format.clone());
+
+                                let mut light_job = egui::text::LayoutJob::default();
+                                light_job.append(icons::SUN_LINE, 0.0, icon_format.clone());
+                                light_job.append("Light", 8.0, text_format.clone());
+
+                                let mut classic_job = egui::text::LayoutJob::default();
+                                classic_job.append(icons::BARD_LINE, 0.0, icon_format.clone());
+                                classic_job.append("Classic", 8.0, text_format.clone());
+
+                                ui.selectable_value(&mut self.theme, themes::Theme::Dark, dark_job);
+                                ui.selectable_value(
+                                    &mut self.theme,
+                                    themes::Theme::Light,
+                                    light_job,
+                                );
                                 ui.selectable_value(
                                     &mut self.theme,
                                     themes::Theme::Classic,
-                                    "Classic",
+                                    classic_job,
                                 );
                             },
                         );
