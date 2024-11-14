@@ -1,3 +1,5 @@
+use egui_remixicon::icons;
+
 pub fn decorations(ctx: &egui::Context) {
     egui::TopBottomPanel::top("panel")
         .max_height(32.0)
@@ -35,19 +37,19 @@ pub fn decorations(ctx: &egui::Context) {
                             ui.visuals().window_fill();
 
                         let mut text_format = egui::TextFormat::simple(
-                            egui::FontId::new(18.0, egui::FontFamily::Monospace),
+                            egui::FontId::proportional(18.0),
                             ui.visuals().text_color(),
                         );
                         text_format.valign = egui::Align::Center;
 
                         let mut minimize_job = egui::text::LayoutJob::single_section(
-                            "".to_string(),
+                            icons::SUBTRACT_FILL.to_string(),
                             text_format.clone(),
                         );
                         minimize_job.first_row_min_height = 32.0;
 
                         let mut close_job = egui::text::LayoutJob::single_section(
-                            "".to_string(),
+                            icons::CLOSE_FILL.to_string(),
                             text_format.clone(),
                         );
                         close_job.first_row_min_height = 32.0;
