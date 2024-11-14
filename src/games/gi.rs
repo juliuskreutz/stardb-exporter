@@ -6,7 +6,7 @@ use std::{
     sync::mpsc,
 };
 
-use artifactarium::{command_id, gen::protos::AchievementAllDataNotify, GamePacket, GameSniffer};
+use auto_artifactarium::{GamePacket, GameSniffer, matches_achievement_packet};
 use base64::prelude::*;
 
 use regex::Regex;
@@ -26,18 +26,16 @@ pub fn sniff(
         };
 
         for command in commands {
-            if command.command_id == command_id::ACHIEVEMENT_ALL_DATA_NOTIFY {
+            if let Some(read_achievements) = matches_achievement_packet(&command) {
                 if !achievements.is_empty() {
                     continue;
                 }
 
-                if let Ok(quest_data) = command.parse_proto::<AchievementAllDataNotify>() {
-                    for quest in quest_data.achievement_list {
-                        if achievement_ids.contains(&quest.id)
-                            && (quest.status.value() == 2 || quest.status.value() == 3)
-                        {
-                            achievements.push(quest.id);
-                        }
+                for achievement in read_achievements {
+                    if achievement_ids.contains(&achievement.id)
+                        && (achievement.status == 2 || achievement.status == 3)
+                    {
+                        achievements.push(achievement.id);
                     }
                 }
             }
