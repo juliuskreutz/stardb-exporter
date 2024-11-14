@@ -139,23 +139,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
-name = "artifactarium"
-version = "1.0.0"
-source = "git+https://github.com/juliuskreutz/artifactarium#f8b01982fe5828cdc4036d5a0bb01e35a406a03c"
-dependencies = [
- "base64 0.22.1",
- "etherparse",
- "kcp",
- "protobuf",
- "protobuf-codegen",
- "rand_mt",
- "rsa",
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
 name = "as-raw-xcb-connection"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -342,6 +325,39 @@ name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
+
+[[package]]
+name = "auto-artifactarium"
+version = "1.0.0"
+source = "git+https://github.com/hashblen/auto-artifactarium#481e64bfd7e8654f78cc283b89070e5da96530ee"
+dependencies = [
+ "base64 0.22.1",
+ "etherparse",
+ "kcp",
+ "protobuf",
+ "protobuf-codegen",
+ "rand_mt",
+ "rsa",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "auto-reliquary"
+version = "1.0.0"
+source = "git+https://github.com/hashblen/auto-reliquary#165d9a64285f8725a27343018f15062623444873"
+dependencies = [
+ "base64 0.22.1",
+ "etherparse",
+ "kcp",
+ "protobuf",
+ "protobuf-codegen",
+ "rand_mt",
+ "serde",
+ "serde_json",
+ "tracing",
+]
 
 [[package]]
 name = "autocfg"
@@ -2805,22 +2821,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
-name = "reliquary"
-version = "5.0.0"
-source = "git+https://github.com/juliuskreutz/reliquary#c694a79d1ba9fd681bdb77ff38569ba4e8809698"
-dependencies = [
- "base64 0.22.1",
- "etherparse",
- "kcp",
- "protobuf",
- "protobuf-codegen",
- "rand_mt",
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
 name = "reqwest"
 version = "0.12.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3359,11 +3359,12 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "stardb-exporter"
-version = "2.3.2"
+version = "2.4.0"
 dependencies = [
  "anyhow",
  "arboard",
- "artifactarium",
+ "auto-artifactarium",
+ "auto-reliquary",
  "base64 0.22.1",
  "eframe",
  "egui",
@@ -3371,7 +3372,6 @@ dependencies = [
  "egui_extras",
  "pcap",
  "regex",
- "reliquary",
  "rfd",
  "self_update",
  "serde",
