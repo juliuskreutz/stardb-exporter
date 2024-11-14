@@ -35,8 +35,8 @@ impl Theme {
 pub fn style() -> egui::Style {
     let mut style = egui::Style::default();
 
-    style.spacing.item_spacing = egui::vec2(8.0, 6.0);
-    style.spacing.button_padding = egui::vec2(16.0, 8.0);
+    style.spacing.item_spacing = egui::vec2(8.0, 8.0);
+    style.spacing.button_padding = egui::vec2(8.0, 4.0);
     style
         .text_styles
         .insert(egui::TextStyle::Body, egui::FontId::proportional(16.0));
@@ -58,8 +58,9 @@ pub fn visuals(colors: &Colors) -> egui::Visuals {
 
     visual.window_fill = bg;
     visual.panel_fill = surface;
+    visual.hyperlink_color = accent;
 
-    visual.selection.bg_fill = accent;
+    visual.selection.bg_fill = border;
     visual.selection.stroke = egui::Stroke::new(1.0, bg);
 
     visual.widgets.noninteractive.bg_fill = bg;
@@ -73,22 +74,22 @@ pub fn visuals(colors: &Colors) -> egui::Visuals {
     visual.widgets.inactive.bg_stroke = egui::Stroke::new(2.0, border);
     visual.widgets.inactive.rounding = egui::Rounding::same(18.0);
 
-    visual.widgets.hovered.bg_fill = accent;
-    visual.widgets.hovered.weak_bg_fill = accent;
-    visual.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, bg);
-    visual.widgets.hovered.bg_stroke = egui::Stroke::new(1.0, accent);
+    visual.widgets.hovered.bg_fill = border;
+    visual.widgets.hovered.weak_bg_fill = border;
+    visual.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, text);
+    visual.widgets.hovered.bg_stroke = egui::Stroke::new(1.0, border);
     visual.widgets.hovered.rounding = egui::Rounding::same(18.0);
 
-    visual.widgets.active.bg_fill = accent;
-    visual.widgets.active.weak_bg_fill = accent;
-    visual.widgets.active.fg_stroke = egui::Stroke::new(1.0, bg);
-    visual.widgets.active.bg_stroke = egui::Stroke::new(1.0, accent);
+    visual.widgets.active.bg_fill = border;
+    visual.widgets.active.weak_bg_fill = border;
+    visual.widgets.active.fg_stroke = egui::Stroke::new(1.0, text);
+    visual.widgets.active.bg_stroke = egui::Stroke::new(1.0, border);
     visual.widgets.active.rounding = egui::Rounding::same(18.0);
 
-    visual.widgets.open.bg_fill = accent;
-    visual.widgets.open.weak_bg_fill = accent;
-    visual.widgets.open.fg_stroke = egui::Stroke::new(1.0, bg);
-    visual.widgets.open.bg_stroke = egui::Stroke::new(1.0, accent);
+    visual.widgets.open.bg_fill = border;
+    visual.widgets.open.weak_bg_fill = border;
+    visual.widgets.open.fg_stroke = egui::Stroke::new(1.0, text);
+    visual.widgets.open.bg_stroke = egui::Stroke::new(1.0, border);
     visual.widgets.open.rounding = egui::Rounding::same(18.0);
 
     visual

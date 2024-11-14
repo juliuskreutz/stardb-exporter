@@ -22,6 +22,7 @@ pub enum Message {
     #[cfg(not(debug_assertions))]
     Updated(Option<self_update::Status>),
     LoggedIn(User),
+    Logout,
     Error(String),
     Toast(egui_notify::Toast),
     Achievements(Vec<u32>),
@@ -67,9 +68,9 @@ impl App {
 
         fonts
             .families
-            .entry(egui::FontFamily::Proportional)
-            .or_default()
-            .insert(0, "Inter".to_string());
+            .get_mut(&egui::FontFamily::Proportional)
+            .unwrap()
+            .push("Inter".to_string());
 
         cc.egui_ctx.set_fonts(fonts);
 
@@ -129,6 +130,20 @@ impl App {
                 self.user = Some(user);
                 self.state = State::Menu;
             }
+            Message::Logout => {
+                let Some(user) = &self.user else {
+                    return;
+                };
+
+                let id = user.id.clone();
+                self.user = None;
+
+                thread::spawn(move || {
+                    let _ = ureq::post("https://stardb.gg/api/users/auth/logout")
+                        .set("Cookie", &id)
+                        .call();
+                });
+            }
             Message::Error(e) => self.state = State::Error(e),
             Message::Achievements(vec) => self.state = State::Achievements(vec),
             Message::Toast(toast) => {
@@ -180,18 +195,111 @@ impl eframe::App for App {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.add_space(32.0);
 
-                    let login_text = self
-                        .user
-                        .as_ref()
-                        .map(|u| u.username.as_str())
-                        .unwrap_or("Login");
+                    let height = if let Some(user) = &self.user {
+                        let mut icon_format = egui::TextFormat::simple(
+                            egui::FontId::proportional(20.0),
+                            ui.visuals().text_color(),
+                        );
+                        icon_format.valign = egui::Align::Center;
 
-                    let login_button = ui.add_enabled(!waiting, egui::Button::new(login_text));
-                    if login_button.clicked() {
-                        self.message_tx.send(Message::GoTo(State::Login)).unwrap();
-                    }
+                        let mut text_format = egui::TextFormat::simple(
+                            egui::FontId::proportional(14.0),
+                            ui.visuals().text_color(),
+                        );
+                        text_format.valign = egui::Align::Center;
 
-                    let height = login_button.rect.height();
+                        let mut username_job = egui::text::LayoutJob::default();
+                        username_job.append(icons::ACCOUNT_CIRCLE_LINE, 0.0, icon_format.clone());
+                        username_job.append(&user.username, 8.0, text_format.clone());
+
+                        let account_button =
+                            ui.add_enabled(!waiting, egui::Button::new(username_job));
+                        let account_popup_id = account_button.id.with("popup");
+
+                        let is_account_popup_open =
+                            ui.memory(|m| m.is_popup_open(account_popup_id));
+
+                        if is_account_popup_open {
+                            egui::popup::popup_above_or_below_widget(
+                                ui,
+                                account_popup_id,
+                                &account_button,
+                                egui::AboveOrBelow::Below,
+                                egui::PopupCloseBehavior::CloseOnClick,
+                                |ui| {
+                                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                    ui.visuals_mut().widgets.inactive.bg_stroke.color =
+                                        ui.visuals().widgets.active.bg_stroke.color;
+
+                                    let mut icon_format = egui::TextFormat::simple(
+                                        egui::FontId::proportional(20.0),
+                                        ui.visuals().text_color(),
+                                    );
+                                    icon_format.valign = egui::Align::Center;
+
+                                    let mut text_format = egui::TextFormat::simple(
+                                        egui::FontId::proportional(14.0),
+                                        ui.visuals().text_color(),
+                                    );
+                                    text_format.valign = egui::Align::Center;
+
+                                    let mut logout_job = egui::text::LayoutJob::default();
+                                    logout_job.append(
+                                        icons::LOGOUT_BOX_LINE,
+                                        0.0,
+                                        icon_format.clone(),
+                                    );
+                                    logout_job.append("Logout", 8.0, text_format.clone());
+
+                                    if ui.button(logout_job).clicked() {
+                                        self.message_tx.send(Message::Logout).unwrap();
+                                    }
+                                },
+                            );
+                        }
+
+                        if account_button.clicked() {
+                            ui.memory_mut(|mem| mem.toggle_popup(account_popup_id));
+                        }
+
+                        account_button.rect.height()
+                    } else {
+                        ui.scope(|ui| {
+                            let text = ui.visuals().widgets.inactive.weak_bg_fill;
+                            let accent = ui.visuals().hyperlink_color;
+                            let accent_hover = ui.visuals().hyperlink_color.gamma_multiply(0.8);
+                            ui.visuals_mut().widgets.inactive.fg_stroke.color = text;
+                            ui.visuals_mut().widgets.inactive.weak_bg_fill = accent;
+                            ui.visuals_mut().widgets.inactive.bg_stroke.color = accent;
+                            ui.visuals_mut().widgets.hovered.fg_stroke.color = text;
+                            ui.visuals_mut().widgets.hovered.weak_bg_fill = accent_hover;
+                            ui.visuals_mut().widgets.hovered.bg_stroke.color = accent_hover;
+                            ui.visuals_mut().widgets.active.fg_stroke.color = text;
+                            ui.visuals_mut().widgets.active.weak_bg_fill = accent_hover;
+                            ui.visuals_mut().widgets.active.bg_stroke.color = accent_hover;
+
+                            let mut icon_format =
+                                egui::TextFormat::simple(egui::FontId::proportional(20.0), text);
+                            icon_format.valign = egui::Align::Center;
+
+                            let mut text_format =
+                                egui::TextFormat::simple(egui::FontId::proportional(14.0), text);
+                            text_format.valign = egui::Align::Center;
+
+                            let mut login_job = egui::text::LayoutJob::default();
+                            login_job.append(icons::LOGIN_BOX_LINE, 0.0, icon_format.clone());
+                            login_job.append("Login", 8.0, text_format.clone());
+
+                            let login_button =
+                                ui.add_enabled(!waiting, egui::Button::new(login_job));
+                            if login_button.clicked() {
+                                self.message_tx.send(Message::GoTo(State::Login)).unwrap();
+                            }
+
+                            login_button.rect.height()
+                        })
+                        .inner
+                    };
 
                     ui.style_mut().spacing.button_padding = egui::vec2(0.0, 0.0);
                     let button = egui::Button::new(
@@ -200,14 +308,14 @@ impl eframe::App for App {
                     let button = button.min_size(egui::vec2(48.0, height));
 
                     let color_button = ui.add(button);
-                    let popup_id = color_button.id.with("popup");
+                    let color_popup_id = color_button.id.with("popup");
 
-                    let is_popup_open = ui.memory(|m| m.is_popup_open(popup_id));
+                    let is_color_popup_open = ui.memory(|m| m.is_popup_open(color_popup_id));
 
-                    if is_popup_open {
+                    if is_color_popup_open {
                         egui::popup::popup_above_or_below_widget(
                             ui,
-                            popup_id,
+                            color_popup_id,
                             &color_button,
                             egui::AboveOrBelow::Below,
                             egui::PopupCloseBehavior::CloseOnClick,
@@ -217,13 +325,13 @@ impl eframe::App for App {
                                     ui.visuals().widgets.active.bg_stroke.color;
 
                                 let mut icon_format = egui::TextFormat::simple(
-                                    egui::FontId::proportional(16.0),
+                                    egui::FontId::proportional(20.0),
                                     ui.visuals().text_color(),
                                 );
                                 icon_format.valign = egui::Align::Center;
 
                                 let mut text_format = egui::TextFormat::simple(
-                                    egui::FontId::proportional(12.0),
+                                    egui::FontId::proportional(14.0),
                                     ui.visuals().text_color(),
                                 );
                                 text_format.valign = egui::Align::Center;
@@ -256,7 +364,7 @@ impl eframe::App for App {
                     }
 
                     if color_button.clicked() {
-                        ui.memory_mut(|mem| mem.toggle_popup(popup_id));
+                        ui.memory_mut(|mem| mem.toggle_popup(color_popup_id));
                     }
                 });
             });
