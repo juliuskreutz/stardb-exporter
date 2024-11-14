@@ -6,7 +6,7 @@ use std::{
     sync::mpsc,
 };
 
-use auto_artifactarium::{GamePacket, GameSniffer, matches_achievement_packet};
+use auto_artifactarium::{matches_achievement_packet, GamePacket, GameSniffer};
 use base64::prelude::*;
 
 use regex::Regex;
