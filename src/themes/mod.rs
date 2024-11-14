@@ -35,7 +35,7 @@ impl Theme {
 pub fn style() -> egui::Style {
     let mut style = egui::Style::default();
 
-    style.spacing.item_spacing = egui::vec2(8.0, 8.0);
+    style.spacing.item_spacing = egui::vec2(16.0, 8.0);
     style.spacing.button_padding = egui::vec2(8.0, 4.0);
     style
         .text_styles

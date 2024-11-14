@@ -171,17 +171,29 @@ impl eframe::App for App {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.set_height(48.0);
+                ui.set_height(36.0);
 
                 ui.add_space(32.0);
 
                 let waiting = matches!(self.state, State::Waiting(_));
 
+                let heading_text = match self.state {
+                    State::Game | State::Achievements(_) | State::PullMenu => match self.game {
+                        games::Game::Hsr => "Honkai Star Rail",
+                        games::Game::Gi => "Genshin Impact",
+                        games::Game::Zzz => "Zenless Zone Zero",
+                    },
+                    _ => "Menu",
+                };
+
                 let heading = ui.add_enabled(
                     !waiting,
                     egui::Label::new(
-                        egui::RichText::new(format!("{} Menu", icons::ARROW_LEFT_UP_LINE))
-                            .heading(),
+                        egui::RichText::new(format!(
+                            "{} {heading_text}",
+                            icons::ARROW_LEFT_UP_LINE
+                        ))
+                        .heading(),
                     ),
                 );
 
@@ -425,14 +437,8 @@ impl eframe::App for App {
                 }
                 State::Achievements(achievements) => {
                     let key = match self.game {
-                        games::Game::Hsr => {
-                            ui.heading("HSR");
-                            "hsr_achievements"
-                        }
-                        games::Game::Gi => {
-                            ui.heading("GI");
-                            "gi_achievements"
-                        }
+                        games::Game::Hsr => "hsr_achievements",
+                        games::Game::Gi => "gi_achievements",
                         _ => unimplemented!(),
                     };
 
@@ -512,8 +518,6 @@ impl eframe::App for App {
                 }
                 State::Game => match self.game {
                     games::Game::Hsr => {
-                        ui.heading("HSR");
-
                         if ui.button("Achievement Exporter").clicked() {
                             self.game.achievements(&self.message_tx);
                             self.state = State::Waiting("Preparing".to_string());
@@ -524,8 +528,6 @@ impl eframe::App for App {
                         }
                     }
                     games::Game::Gi => {
-                        ui.heading("GI");
-
                         if ui.button("Achievement Exporter").clicked() {
                             self.game.achievements(&self.message_tx);
                             self.state = State::Waiting("Preparing".to_string());
@@ -536,8 +538,6 @@ impl eframe::App for App {
                         }
                     }
                     games::Game::Zzz => {
-                        ui.heading("ZZZ");
-
                         if ui.button("Signal Exporter").clicked() {
                             self.state = State::PullMenu;
                         }
@@ -593,7 +593,6 @@ impl eframe::App for App {
                 State::PullMenu => {
                     match self.game {
                         games::Game::Hsr => {
-                            ui.heading("HSR - Warp Exporter");
                             ui.label(format!(
                                 "Path: {}",
                                 self.paths
@@ -604,7 +603,6 @@ impl eframe::App for App {
                             ));
                         }
                         games::Game::Gi => {
-                            ui.heading("GI - Wish Exporter");
                             ui.label(format!(
                                 "Path: {}",
                                 self.paths
@@ -615,7 +613,6 @@ impl eframe::App for App {
                             ));
                         }
                         games::Game::Zzz => {
-                            ui.heading("ZZZ - Signal Exporter");
                             ui.label(format!(
                                 "Path: {}",
                                 self.paths
