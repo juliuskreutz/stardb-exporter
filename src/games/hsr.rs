@@ -6,8 +6,8 @@ use std::{
     sync::mpsc,
 };
 
+use auto_reliquary::{matches_achievement_packet, GamePacket, GameSniffer};
 use base64::prelude::*;
-use auto_reliquary::{GamePacket, GameSniffer, matches_achievement_packet};
 
 pub fn sniff(
     achievement_ids: &[u32],
