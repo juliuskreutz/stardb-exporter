@@ -7,7 +7,7 @@ use std::{
 };
 
 use base64::prelude::*;
-use reliquary::{command_id, gen::protos::GetQuestDataScRsp, GamePacket, GameSniffer};
+use auto_reliquary::{GamePacket, GameSniffer, matches_achievement_packet};
 
 pub fn sniff(
     achievement_ids: &[u32],
@@ -25,18 +25,16 @@ pub fn sniff(
         };
 
         for command in commands {
-            if command.command_id == command_id::GET_QUEST_DATA_SC_RSP {
+            if let Some(read_achievements) = matches_achievement_packet(&command) {
                 if !achievements.is_empty() {
                     continue;
                 }
 
-                if let Ok(quest_data) = command.parse_proto::<GetQuestDataScRsp>() {
-                    for quest in quest_data.quest_list {
-                        if achievement_ids.contains(&quest.id)
-                            && (quest.status.value() == 2 || quest.status.value() == 3)
-                        {
-                            achievements.push(quest.id);
-                        }
+                for achievement in read_achievements {
+                    if achievement_ids.contains(&achievement.id)
+                        && (achievement.status == 2 || achievement.status == 3)
+                    {
+                        achievements.push(achievement.id);
                     }
                 }
             }
