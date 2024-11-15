@@ -21,7 +21,7 @@ pub enum Message {
     GoTo(State),
     #[cfg(not(debug_assertions))]
     Updated(Option<self_update::Status>),
-    LoggedIn(User),
+    User(Option<User>),
     Logout,
     Error(String),
     Toast(egui_notify::Toast),
@@ -94,6 +94,40 @@ impl App {
 
         update(&message_tx);
 
+        if let Some(user) = &user {
+            let message_tx = message_tx.clone();
+            let id = user.id.clone();
+
+            thread::spawn(move || {
+                let Some(response) = ureq::post("https://stardb.gg/api/users/auth/renew")
+                    .set("Cookie", &id)
+                    .call()
+                    .ok()
+                    .and_then(|r| (r.status() == 200).then_some(r))
+                else {
+                    message_tx
+                        .send(Message::Error(
+                            "There was an error renewing your account cookie".to_string(),
+                        ))
+                        .unwrap();
+                    message_tx.send(Message::User(None)).unwrap();
+                    return;
+                };
+
+                let id = response
+                    .header("Set-Cookie")
+                    .unwrap()
+                    .split(';')
+                    .next()
+                    .unwrap()
+                    .to_string();
+                let username = response.into_json().unwrap();
+
+                let user = User { id, username };
+                message_tx.send(Message::User(Some(user))).unwrap();
+            });
+        }
+
         Self {
             message_tx,
             message_rx,
@@ -126,9 +160,8 @@ impl App {
                     self.state = State::Error("Error updating".to_string());
                 }
             }
-            Message::LoggedIn(user) => {
-                self.user = Some(user);
-                self.state = State::Menu;
+            Message::User(user) => {
+                self.user = user;
             }
             Message::Logout => {
                 let Some(user) = &self.user else {
@@ -705,7 +738,8 @@ fn login(username: &str, password: &str, message_tx: &mpsc::Sender<Message>) {
 
             let user = User { id, username };
 
-            message_tx.send(Message::LoggedIn(user)).unwrap();
+            message_tx.send(Message::User(Some(user))).unwrap();
+            message_tx.send(Message::GoTo(State::Menu)).unwrap();
         } else {
             message_tx
                 .send(Message::Error(
