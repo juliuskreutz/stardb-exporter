@@ -25,3 +25,5 @@ This method will not work on any kind of VPN
 ## Special thanks
 
 Thank you [@IceDynamix](https://github.com/IceDynamix) for providing the building blocks for this with their [reliquary](https://github.com/IceDynamix/reliquary) project!
+
+Thank you [@hashblen](https://github.com/hashblen) for creating a protocol parsers that don't need any further updates ([auto-reliquary](https://github.com/hashblen/auto-reliquary) and [auto-artifactarium](https://github.com/hashblen/auto-artifactarium))!
