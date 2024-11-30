@@ -15,7 +15,10 @@ This method will not work on any kind of VPN
   - Windows: During Npcap installation, ensure `Support raw 802.11 traffic (and monitor mode) for wireless adapters` is ticked.
   - Linux and Macos: Make sure you enable monitor mode for your wireless adapter.
 
-- Download the latest release [here](https://github.com/juliuskreutz/stardb-exporter/releases/latest).
+- Download the latest release:
+  - [Windows](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter.exe)
+  - [Linux](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter-linux)
+  - [MacOs](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter-macos)
 - Launch the game to the point where.
   - HSR: The train is right before going into hyper speed
   - Genshin: Right before entering the door
