@@ -1,10 +1,10 @@
 [package]
 name = "stardb-exporter"
-version = "2.4.4"
+version = "2.4.5"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 arboard = "3.4.1"
 auto-artifactarium = { git = "https://github.com/hashblen/auto-artifactarium" }
 base64 = "0.22.1"
@@ -19,15 +19,15 @@ egui_extras = { version = "0.29.1", features = ["all_loaders"] }
 pcap = "2.2.0"
 regex = "1.11.1"
 auto-reliquary = { git = "https://github.com/hashblen/auto-reliquary" }
-rfd = "0.15.0"
+rfd = "0.15.1"
 self_update = { version = "0.41.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
 serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.132"
-ureq = { version = "2.10.1", features = ["json"] }
+serde_json = "1.0.133"
+ureq = { version = "2.12.0", features = ["json"] }
 egui-remixicon = "0.29.1"
 
 [build-dependencies]
-winresource = "0.1.17"
+winresource = "0.1.19"
