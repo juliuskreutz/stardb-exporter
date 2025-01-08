@@ -59,11 +59,18 @@ impl App {
         egui_extras::install_image_loaders(&cc.egui_ctx);
 
         let mut fonts = egui::FontDefinitions::default();
-        egui_remixicon::add_to_fonts(&mut fonts);
+
+        fonts.font_data.insert(
+            "remixicon".into(),
+            egui::FontData::from_static(egui_remixicon::FONT).into(),
+        );
+        if let Some(font_keys) = fonts.families.get_mut(&egui::FontFamily::Proportional) {
+            font_keys.push("remixicon".into());
+        }
 
         fonts.font_data.insert(
             "Inter".to_string(),
-            egui::FontData::from_static(include_bytes!("../fonts/Inter.ttf")),
+            egui::FontData::from_static(include_bytes!("../fonts/Inter.ttf")).into(),
         );
 
         fonts
@@ -561,6 +568,8 @@ impl eframe::App for App {
                         }
                     }
                     games::Game::Gi => {
+                        ui.colored_label(ui.visuals().hyperlink_color, format!("{} Make sure, that you fresh started the game before using the achievement exporter!!", icons::INFORMATION_LINE));
+
                         if ui.button("Achievement Exporter").clicked() {
                             self.game.achievements(&self.message_tx);
                             self.state = State::Waiting("Preparing".to_string());
