@@ -5,20 +5,24 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    nixpkgs,
-    rust-overlay,
-    flake-utils,
-    ...
-  }:
+  outputs =
+    {
+      nixpkgs,
+      rust-overlay,
+      flake-utils,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
-      system: let
-        overlays = [(import rust-overlay)];
+      system:
+      let
+        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
           inherit system overlays;
         };
-      in {
-        devShells.default = with pkgs;
+      in
+      {
+        devShells.default =
+          with pkgs;
           mkShell {
             buildInputs = [
               rust-bin.stable.latest.default
@@ -31,7 +35,11 @@
             ];
 
             WINIT_UNIX_BACKEND = wayland;
-            LD_LIBRARY_PATH = "${lib.makeLibraryPath [pkgs.wayland pkgs.libxkbcommon pkgs.libGL]}";
+            LD_LIBRARY_PATH = "${lib.makeLibraryPath [
+              pkgs.wayland
+              pkgs.libxkbcommon
+              pkgs.libGL
+            ]}";
           };
       }
     );
