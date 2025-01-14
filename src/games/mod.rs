@@ -27,7 +27,9 @@ impl Game {
             let achievement_ids = match self.achievement_ids() {
                 Ok(achievement_ids) => achievement_ids,
                 Err(e) => {
-                    message_tx.send(Message::Error(e.to_string())).unwrap();
+                    message_tx
+                        .send(Message::GoTo(State::Error(e.to_string())))
+                        .unwrap();
                     return;
                 }
             };
@@ -35,7 +37,9 @@ impl Game {
             let devices = match self.devices() {
                 Ok(devices) => devices,
                 Err(e) => {
-                    message_tx.send(Message::Error(e.to_string())).unwrap();
+                    message_tx
+                        .send(Message::GoTo(State::Error(e.to_string())))
+                        .unwrap();
                     return;
                 }
             };
@@ -55,13 +59,15 @@ impl Game {
             let achievements = match achievements {
                 Ok(achievements) => achievements,
                 Err(e) => {
-                    message_tx.send(Message::Error(e.to_string())).unwrap();
+                    message_tx
+                        .send(Message::GoTo(State::Error(e.to_string())))
+                        .unwrap();
                     return;
                 }
             };
 
             message_tx
-                .send(Message::Achievements(achievements))
+                .send(Message::GoTo(State::Achievements(achievements)))
                 .unwrap();
         });
     }
