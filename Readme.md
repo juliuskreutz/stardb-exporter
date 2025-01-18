@@ -29,6 +29,7 @@ This method will not work on any kind of VPN
 ## Building from source
 
 For linux users, you need to set the `CAP_NET_RAW` capability
+
 ```sh
 sudo setcap CAP_NET_RAW=+ep target/release/stardb-exporter
 ```
