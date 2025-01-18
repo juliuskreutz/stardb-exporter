@@ -48,13 +48,7 @@ impl Game {
             for (i, device) in devices.into_iter().enumerate() {
                 let device_tx = device_tx.clone();
                 let message_tx = message_tx.clone();
-                std::thread::spawn(move || {
-                    if let Err(e) = self.capture_device(i, device, &device_tx, &message_tx) {
-                        message_tx
-                            .send(Message::GoTo(State::Error(e.to_string())))
-                            .unwrap()
-                    }
-                });
+                std::thread::spawn(move || self.capture_device(i, device, &device_tx, &message_tx));
             }
 
             let achievements = match self {
