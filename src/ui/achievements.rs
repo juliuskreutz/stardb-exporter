@@ -59,7 +59,10 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
                 let achievements = achievements.to_vec();
 
                 thread::spawn(move || {
-                    match ureq::put(&url).set("Cookie", &id).send_json(achievements) {
+                    match ureq::put(&url)
+                        .header("Cookie", &id)
+                        .send_json(achievements)
+                    {
                         Ok(r) => {
                             if r.status() == 200 {
                                 message_tx

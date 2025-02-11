@@ -7,10 +7,10 @@ pub fn show(ui: &mut egui::Ui, username: &str, password: &str, app: &App) {
     let mut password = password.to_string();
 
     ui.label("Username:");
-    ui.text_edit_singleline(&mut username);
+    let username_edit = ui.text_edit_singleline(&mut username);
 
     ui.label("Password:");
-    ui.add(egui::TextEdit::singleline(&mut password).password(true));
+    let password_edit = ui.add(egui::TextEdit::singleline(&mut password).password(true));
 
     if ui.button("Login").clicked() {
         login(&username, &password, &app.message_tx);
@@ -18,7 +18,7 @@ pub fn show(ui: &mut egui::Ui, username: &str, password: &str, app: &App) {
         app.message_tx
             .send(Message::GoTo(State::Waiting("Loggin In".to_string())))
             .unwrap();
-    } else {
+    } else if username_edit.changed() || password_edit.changed() {
         app.message_tx
             .send(Message::GoTo(State::Login(username, password)))
             .unwrap();
@@ -40,7 +40,9 @@ fn login(username: &str, password: &str, message_tx: &mpsc::Sender<Message>) {
             .send_json(json)
             .ok()
             .and_then(|r| {
-                r.header("Set-Cookie")
+                r.headers()
+                    .get("Set-Cookie")
+                    .and_then(|h| h.to_str().ok())
                     .and_then(|id| id.split(';').next())
                     .map(|s| s.to_string())
             });

@@ -107,9 +107,9 @@ impl App {
             let id = user.id.clone();
 
             thread::spawn(move || {
-                let Some(response) = ureq::post("https://stardb.gg/api/users/auth/renew")
-                    .set("Cookie", &id)
-                    .call()
+                let Some(mut response) = ureq::post("https://stardb.gg/api/users/auth/renew")
+                    .header("Cookie", &id)
+                    .send_empty()
                     .ok()
                     .and_then(|r| (r.status() == 200).then_some(r))
                 else {
@@ -123,13 +123,16 @@ impl App {
                 };
 
                 let id = response
-                    .header("Set-Cookie")
+                    .headers()
+                    .get("Set-Cookie")
+                    .unwrap()
+                    .to_str()
                     .unwrap()
                     .split(';')
                     .next()
                     .unwrap()
                     .to_string();
-                let username = response.into_json().unwrap();
+                let username = response.body_mut().read_json().unwrap();
 
                 let user = User { id, username };
                 message_tx.send(Message::User(Some(user))).unwrap();
@@ -150,7 +153,9 @@ impl App {
 
     fn message(&mut self, message: Message) {
         match message {
-            Message::GoTo(state) => self.state = state,
+            Message::GoTo(state) => {
+                self.state = state;
+            }
             Message::Game(game) => {
                 self.game = game;
                 self.state = State::Game;
@@ -187,8 +192,8 @@ impl App {
 
                 thread::spawn(move || {
                     let _ = ureq::post("https://stardb.gg/api/users/auth/logout")
-                        .set("Cookie", &id)
-                        .call();
+                        .header("Cookie", &id)
+                        .send_empty();
                 });
             }
             Message::Toast(toast) => {
@@ -211,8 +216,6 @@ impl eframe::App for App {
         }
 
         ctx.set_style(self.theme.style());
-
-        ui::decorations::show(ctx);
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui::header::show(ctx, ui, self);

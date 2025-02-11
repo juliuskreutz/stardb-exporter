@@ -72,25 +72,25 @@ pub fn visuals(colors: &Colors) -> egui::Visuals {
     visual.widgets.inactive.weak_bg_fill = surface;
     visual.widgets.inactive.fg_stroke = egui::Stroke::new(1.0, text);
     visual.widgets.inactive.bg_stroke = egui::Stroke::new(2.0, border);
-    visual.widgets.inactive.rounding = egui::Rounding::same(18.0);
+    visual.widgets.inactive.corner_radius = egui::CornerRadius::same(18);
 
     visual.widgets.hovered.bg_fill = border;
     visual.widgets.hovered.weak_bg_fill = border;
     visual.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, text);
     visual.widgets.hovered.bg_stroke = egui::Stroke::new(1.0, border);
-    visual.widgets.hovered.rounding = egui::Rounding::same(18.0);
+    visual.widgets.hovered.corner_radius = egui::CornerRadius::same(18);
 
     visual.widgets.active.bg_fill = border;
     visual.widgets.active.weak_bg_fill = border;
     visual.widgets.active.fg_stroke = egui::Stroke::new(1.0, text);
     visual.widgets.active.bg_stroke = egui::Stroke::new(1.0, border);
-    visual.widgets.active.rounding = egui::Rounding::same(18.0);
+    visual.widgets.active.corner_radius = egui::CornerRadius::same(18);
 
     visual.widgets.open.bg_fill = border;
     visual.widgets.open.weak_bg_fill = border;
     visual.widgets.open.fg_stroke = egui::Stroke::new(1.0, text);
     visual.widgets.open.bg_stroke = egui::Stroke::new(1.0, border);
-    visual.widgets.open.rounding = egui::Rounding::same(18.0);
+    visual.widgets.open.corner_radius = egui::CornerRadius::same(18);
 
     visual
 }

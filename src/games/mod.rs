@@ -92,7 +92,7 @@ impl Game {
             _ => unimplemented!(),
         };
 
-        let achievements: Vec<Achievement> = ureq::get(url).call()?.into_json()?;
+        let achievements: Vec<Achievement> = ureq::get(url).call()?.body_mut().read_json()?;
         let achievement_ids: Vec<_> = achievements.into_iter().map(|a| a.id).collect();
 
         Ok(achievement_ids)
@@ -196,7 +196,7 @@ pub fn pulls_from_game_path(path: &Path) -> anyhow::Result<String> {
                 if ureq::get(url)
                     .call()
                     .ok()
-                    .and_then(|r| r.into_json::<serde_json::Value>().ok())
+                    .and_then(|mut r| r.body_mut().read_json::<serde_json::Value>().ok())
                     .map(|j| j["retcode"] == 0)
                     .unwrap_or_default()
                 {

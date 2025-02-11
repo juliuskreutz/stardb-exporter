@@ -34,17 +34,17 @@ pub fn show(ui: &mut egui::Ui, url: &str, app: &App) {
         };
 
         let request = if let Some(user) = &app.user {
-            ureq::post(import_url).set("Cookie", &user.id)
+            ureq::post(import_url).header("Cookie", &user.id)
         } else {
             ureq::post(import_url)
         };
 
         match request.send_json(serde_json::json!({"url": url})) {
-            Ok(r) => {
+            Ok(mut r) => {
                 app.message_tx
                     .send(Message::Toast(egui_notify::Toast::success(format!(
                         "Synced uid {}",
-                        r.into_json::<serde_json::Value>().unwrap()["uid"]
+                        r.body_mut().read_json::<serde_json::Value>().unwrap()["uid"]
                     ))))
                     .unwrap();
                 app.message_tx

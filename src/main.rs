@@ -9,7 +9,6 @@ fn main() -> anyhow::Result<()> {
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_min_inner_size([400.0, 300.0])
-            .with_decorations(false)
             .with_icon(eframe::icon_data::from_png_bytes(include_bytes!(
                 "../icons/icon.png"
             ))?),
