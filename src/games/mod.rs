@@ -80,6 +80,26 @@ impl Game {
         }
     }
 
+    pub fn achievement_url(self) -> String {
+        let prefix = match self {
+            Game::Hsr => "",
+            Game::Gi => "genshin",
+            Game::Zzz => "zzz",
+        };
+
+        format!("https://stardb.gg/{prefix}/achievement-tracker")
+    }
+
+    pub fn pull_url(self) -> String {
+        let path = match self {
+            Game::Hsr => "warp-tracker",
+            Game::Gi => "genshin/wish-tracker",
+            Game::Zzz => "zzz/signal-tracker",
+        };
+
+        format!("https://stardb.gg/{path}")
+    }
+
     fn achievement_ids(self) -> anyhow::Result<Vec<u32>> {
         #[derive(serde::Deserialize)]
         struct Achievement {

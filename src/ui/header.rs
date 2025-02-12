@@ -86,9 +86,29 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
                             );
                             text_format.valign = egui::Align::Center;
 
+                            let mut website_job = egui::text::LayoutJob::default();
+                            website_job.append(icons::LINK, 0.0, icon_format.clone());
+                            website_job.append("Website", 8.0, text_format.clone());
+
                             let mut logout_job = egui::text::LayoutJob::default();
                             logout_job.append(icons::LOGOUT_BOX_LINE, 0.0, icon_format.clone());
                             logout_job.append("Logout", 8.0, text_format.clone());
+
+                            if ui.button(website_job).clicked() {
+                                let url = match app.state {
+                                    State::Achievements(_) => app.game.achievement_url(),
+                                    State::PullMenu | State::Pulls(_) => app.game.pull_url(),
+                                    _ => "https://stardb.gg".to_string(),
+                                };
+
+                                if let Err(e) = open::that(url) {
+                                    app.message_tx
+                                        .send(Message::Toast(egui_notify::Toast::error(format!(
+                                            "{e}"
+                                        ))))
+                                        .unwrap();
+                                }
+                            }
 
                             if ui.button(logout_job).clicked() {
                                 app.message_tx.send(Message::Logout).unwrap();
