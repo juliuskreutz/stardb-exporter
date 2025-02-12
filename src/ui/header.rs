@@ -161,6 +161,7 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
                 .inner
             };
 
+            let old_button_padding = ui.style().spacing.button_padding;
             ui.style_mut().spacing.button_padding = egui::vec2(0.0, 0.0);
             let button = egui::Button::new(
                 egui::RichText::new(egui_remixicon::icons::PALETTE_LINE).size(20.0),
@@ -221,6 +222,46 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
 
             if color_button.clicked() {
                 ui.memory_mut(|mem| mem.toggle_popup(color_popup_id));
+            }
+
+            ui.style_mut().spacing.button_padding = old_button_padding;
+            let text = egui::Color32::BLACK;
+            let accent = egui::Color32::from_rgb(250, 204, 21);
+            let accent_hover = egui::Color32::from_rgb(253, 224, 71);
+            ui.visuals_mut().widgets.inactive.fg_stroke.color = text;
+            ui.visuals_mut().widgets.inactive.weak_bg_fill = accent;
+            ui.visuals_mut().widgets.inactive.bg_stroke.color = accent;
+            ui.visuals_mut().widgets.hovered.fg_stroke.color = text;
+            ui.visuals_mut().widgets.hovered.weak_bg_fill = accent_hover;
+            ui.visuals_mut().widgets.hovered.bg_stroke.color = accent_hover;
+            ui.visuals_mut().widgets.active.fg_stroke.color = text;
+            ui.visuals_mut().widgets.active.weak_bg_fill = accent_hover;
+            ui.visuals_mut().widgets.active.bg_stroke.color = accent_hover;
+
+            let mut icon_format = egui::TextFormat::simple(
+                egui::FontId::proportional(20.0),
+                text
+            );
+            icon_format.valign = egui::Align::Center;
+
+            let mut text_format = egui::TextFormat::simple(
+                egui::FontId::proportional(14.0),
+                text
+            );
+            text_format.valign = egui::Align::Center;
+
+            let mut lootbar_job = egui::text::LayoutJob::default();
+            lootbar_job.append(icons::LINKS_LINE, 0.0, icon_format.clone());
+            lootbar_job.append("Lootbar", 8.0, text_format.clone());
+
+            let button = egui::Button::new(lootbar_job);
+
+            if ui.add(button).clicked() {
+                if let Err(e) = open::that("https://lootbar.gg/index?utm_source=Affiliate&utm_medium=Affiliate&utm_campaign=lHBYqExxGc") {
+                    app.message_tx
+                        .send(Message::Toast(egui_notify::Toast::error(format!("{e}"))))
+                        .unwrap();
+                }
             }
         });
     });
