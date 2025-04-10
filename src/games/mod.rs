@@ -221,8 +221,6 @@ pub fn pulls_from_game_path(path: &Path) -> anyhow::Result<String> {
                     .unwrap_or_default()
                 {
                     return Ok(url.to_string());
-                } else {
-                    return Err(anyhow::anyhow!("Pull url outdated"));
                 }
             }
         }
