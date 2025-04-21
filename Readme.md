@@ -28,6 +28,14 @@ This method will not work on any kind of VPN
 
 ## Building from source
 
+Install [Rust](https://www.rust-lang.org/).
+
+Use this command to compile the source code:
+```sh
+cargo build --release
+```
+After it is done, you should fine the executable in `<repository folder>/target/release` folder.
+
 For linux users, you need to set the `CAP_NET_RAW` capability
 
 ```sh
