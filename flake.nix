@@ -36,9 +36,9 @@
 
             WINIT_UNIX_BACKEND = wayland;
             LD_LIBRARY_PATH = "${lib.makeLibraryPath [
-              pkgs.wayland
-              pkgs.libxkbcommon
-              pkgs.libGL
+              wayland
+              libxkbcommon
+              libGL
             ]}";
           };
       }
