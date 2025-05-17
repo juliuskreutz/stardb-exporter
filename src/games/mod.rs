@@ -9,7 +9,7 @@ use std::{
 };
 
 use regex::Regex;
-
+use tracing::{debug, info};
 use crate::app::{Message, State};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -140,6 +140,7 @@ impl Game {
             _ => unimplemented!(),
         };
 
+        debug!("Finding devices...");
         loop {
             let mut capture = pcap::Capture::from_device(device.clone())?
                 .immediate_mode(true)
@@ -160,6 +161,7 @@ impl Game {
             message_tx
                 .send(Message::GoTo(State::Waiting("Running".to_string())))
                 .unwrap();
+            info!("Device {i} Ready~!");
 
             let mut has_captured = false;
 
@@ -184,6 +186,7 @@ impl Game {
                     toast
                 }))
                 .unwrap();
+            info!("Device {i} Error. Starting up again...");
         }
     }
 }
