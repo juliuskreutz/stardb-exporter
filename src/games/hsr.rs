@@ -8,6 +8,7 @@ use std::{
 
 use auto_reliquary::{matches_achievement_packet, GamePacket, GameSniffer};
 use base64::prelude::*;
+use tracing::info;
 
 pub fn sniff(
     achievement_ids: &[u32],
@@ -26,6 +27,7 @@ pub fn sniff(
 
         for command in commands {
             if let Some(read_achievements) = matches_achievement_packet(&command) {
+                info!("Found achievement packet");
                 if !achievements.is_empty() {
                     continue;
                 }
