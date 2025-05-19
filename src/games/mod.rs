@@ -8,9 +8,8 @@ use std::{
     thread,
 };
 
-use regex::Regex;
-use tracing::{debug, info};
 use crate::app::{Message, State};
+use regex::Regex;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Game {
@@ -140,7 +139,8 @@ impl Game {
             _ => unimplemented!(),
         };
 
-        debug!("Finding devices...");
+        tracing::debug!("Finding devices...");
+
         loop {
             let mut capture = pcap::Capture::from_device(device.clone())?
                 .immediate_mode(true)
@@ -161,7 +161,7 @@ impl Game {
             message_tx
                 .send(Message::GoTo(State::Waiting("Running".to_string())))
                 .unwrap();
-            info!("Device {i} Ready~!");
+            tracing::info!("Device {i} Ready~!");
 
             let mut has_captured = false;
 
@@ -186,7 +186,7 @@ impl Game {
                     toast
                 }))
                 .unwrap();
-            info!("Device {i} Error. Starting up again...");
+            tracing::info!("Device {i} Error. Starting up again...");
         }
     }
 }
@@ -228,5 +228,6 @@ pub fn pulls_from_game_path(path: &Path) -> anyhow::Result<String> {
             }
         }
     }
+
     Err(anyhow::anyhow!("Couldn't find pull url"))
 }

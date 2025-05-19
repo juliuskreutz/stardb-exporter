@@ -1,9 +1,6 @@
 #![windows_subsystem = "windows"]
 
 use std::path::PathBuf;
-use tracing::{info, Level};
-use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::fmt;
 
 mod app;
 mod games;
@@ -11,7 +8,7 @@ mod themes;
 mod ui;
 
 fn main() -> anyhow::Result<()> {
-    let _guard = tracing_init().expect("Failed to setup logging");
+    tracing_init()?;
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -33,21 +30,20 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn tracing_init() -> Result<WorkerGuard, Box<dyn std::error::Error>> {
-
+fn tracing_init() -> anyhow::Result<()> {
     let mut log_path = PathBuf::from(&std::env::var("APPDATA")?);
     log_path.push("Stardb Exporter");
     log_path.push("log");
-    std::fs::create_dir_all(log_path.parent().unwrap())?;
+    std::fs::create_dir_all(&log_path)?;
 
-    let file_appender = tracing_appender::rolling::daily(log_path.parent().unwrap(), "log");
-    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
-    let subscriber = fmt()
-        .with_max_level(Level::DEBUG)
-        .with_writer(non_blocking)
+    let appender = tracing_appender::rolling::daily(log_path, "log");
+    let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
+
+    tracing_subscriber::fmt()
+        .with_writer(non_blocking_appender)
         .with_ansi(false)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber)?;
-    info!("Tracing initialized and logging to file.");
-    Ok(guard)
+        .init();
+    tracing::info!("Tracing initialized and logging to file.");
+
+    Ok(())
 }
