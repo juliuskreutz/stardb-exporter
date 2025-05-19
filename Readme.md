@@ -1,12 +1,13 @@
 # stardb-exporter
 
-## Instructions (If you only use the pull url feature, you don't need the instructions below)
+## Instructions
 
 This method will not work on any kind of VPN
 
 - Download and install pcap
 
-  - Windows: [Npcap Installer](https://npcap.com/#download) (Ensure `Install Npcap in WinPcap API-compatible mode` is ticked)
+  - Windows: [Npcap Installer](https://npcap.com/#download) (Ensure `Install Npcap in WinPcap API-compatible mode` is ticked) \
+    **Also ensure, that you're using the latest version of Npcap**
   - Linux: Figure it out, lol. The package should be called libpcap
   - Macos: Use brew https://formulae.brew.sh/formula/libpcap
 
