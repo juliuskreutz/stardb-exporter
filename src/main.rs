@@ -34,7 +34,6 @@ fn tracing_init() -> anyhow::Result<()> {
     let mut log_path = PathBuf::from(&std::env::var("APPDATA")?);
     log_path.push("Stardb Exporter");
     log_path.push("log");
-    std::fs::create_dir_all(&log_path)?;
 
     let appender = tracing_appender::rolling::daily(log_path, "log");
     let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
