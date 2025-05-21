@@ -1,14 +1,14 @@
 #![windows_subsystem = "windows"]
 
-use std::path::PathBuf;
-
 mod app;
 mod games;
 mod themes;
 mod ui;
 
+const APP_ID: &str = "Stardb Exporter";
+
 fn main() -> anyhow::Result<()> {
-    tracing_init()?;
+    let _guard = tracing_init()?;
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -21,7 +21,7 @@ fn main() -> anyhow::Result<()> {
     };
 
     eframe::run_native(
-        "Stardb Exporter",
+        APP_ID,
         native_options,
         Box::new(|cc| Ok(Box::new(app::App::new(cc)))),
     )
@@ -30,13 +30,13 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn tracing_init() -> anyhow::Result<()> {
-    let mut log_path = PathBuf::from(&std::env::var("APPDATA")?);
-    log_path.push("Stardb Exporter");
-    log_path.push("log");
+fn tracing_init() -> anyhow::Result<tracing_appender::non_blocking::WorkerGuard> {
+    let mut storage_dir =
+        anyhow::Context::context(eframe::storage_dir(APP_ID), "Storage dir not found")?;
+    storage_dir.push("log");
 
-    let appender = tracing_appender::rolling::daily(log_path, "log");
-    let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
+    let appender = tracing_appender::rolling::daily(storage_dir, "log");
+    let (non_blocking_appender, guard) = tracing_appender::non_blocking(appender);
 
     tracing_subscriber::fmt()
         .with_writer(non_blocking_appender)
@@ -44,5 +44,5 @@ fn tracing_init() -> anyhow::Result<()> {
         .init();
     tracing::info!("Tracing initialized and logging to file.");
 
-    Ok(())
+    Ok(guard)
 }
