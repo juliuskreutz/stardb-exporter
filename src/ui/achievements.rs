@@ -59,6 +59,56 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
                 let achievements = achievements.to_vec();
 
                 thread::spawn(move || {
+                    let to_delete: Vec<i32> = match ureq::get(&url).header("Cookie", &id).call() {
+                        Ok(r) => {
+                            if r.status() == 200 {
+                                r.into_body().read_json().unwrap()
+                            } else {
+                                message_tx
+                                    .send(Message::Toast(egui_notify::Toast::error(
+                                        "Error. Try Relogging",
+                                    )))
+                                    .unwrap();
+
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            message_tx
+                                .send(Message::Toast(egui_notify::Toast::error(format!(
+                                    "Error: {e}"
+                                ))))
+                                .unwrap();
+                            return;
+                        }
+                    };
+
+                    match ureq::delete(&url)
+                        .header("Cookie", &id)
+                        .force_send_body()
+                        .send_json(to_delete)
+                    {
+                        Ok(r) => {
+                            if r.status() != 200 {
+                                message_tx
+                                    .send(Message::Toast(egui_notify::Toast::error(
+                                        "Error. Try Relogging",
+                                    )))
+                                    .unwrap();
+
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            message_tx
+                                .send(Message::Toast(egui_notify::Toast::error(format!(
+                                    "Error: {e}"
+                                ))))
+                                .unwrap();
+                            return;
+                        }
+                    };
+
                     match ureq::put(&url)
                         .header("Cookie", &id)
                         .send_json(achievements)
