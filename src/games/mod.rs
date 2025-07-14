@@ -214,7 +214,9 @@ pub fn pulls_from_game_path(path: &Path) -> anyhow::Result<String> {
     let lines: Vec<_> = data.split("1/0/").collect();
 
     for line in lines.iter().rev() {
-        if line.starts_with("https://") && line.contains("getGachaLog") {
+        if line.starts_with("https://")
+            && (line.contains("getGachaLog") || line.contains("getLdGachaLog"))
+        {
             if let Some(url) = line.split('\0').next() {
                 if ureq::get(url)
                     .call()

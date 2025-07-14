@@ -1,6 +1,6 @@
 [package]
 name = "stardb-exporter"
-version = "2.10.0"
+version = "2.10.1"
 edition = "2024"
 
 [dependencies]
