@@ -40,6 +40,8 @@ pub struct App {
     pub theme: themes::Theme,
     pub user: Option<User>,
     pub paths: Paths,
+    pub account_popup_open: bool,
+    pub theme_popup_open: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -148,6 +150,8 @@ impl App {
             theme,
             user,
             paths,
+            account_popup_open: false,
+            theme_popup_open: false,
         }
     }
 

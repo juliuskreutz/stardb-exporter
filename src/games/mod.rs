@@ -216,18 +216,15 @@ pub fn pulls_from_game_path(path: &Path) -> anyhow::Result<String> {
     for line in lines.iter().rev() {
         if line.starts_with("https://")
             && (line.contains("getGachaLog") || line.contains("getLdGachaLog"))
+            && let Some(url) = line.split('\0').next()
+            && ureq::get(url)
+                .call()
+                .ok()
+                .and_then(|mut r| r.body_mut().read_json::<serde_json::Value>().ok())
+                .map(|j| j["retcode"] == 0)
+                .unwrap_or_default()
         {
-            if let Some(url) = line.split('\0').next() {
-                if ureq::get(url)
-                    .call()
-                    .ok()
-                    .and_then(|mut r| r.body_mut().read_json::<serde_json::Value>().ok())
-                    .map(|j| j["retcode"] == 0)
-                    .unwrap_or_default()
-                {
-                    return Ok(url.to_string());
-                }
-            }
+            return Ok(url.to_string());
         }
     }
 

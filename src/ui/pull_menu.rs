@@ -52,10 +52,9 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
     if ui
         .button("Manual selection (e.g. D:\\Star Rail\\Games\\StarRail_Data)")
         .clicked()
+        && let Some(path) = rfd::FileDialog::new().pick_folder()
     {
-        if let Some(path) = rfd::FileDialog::new().pick_folder() {
-            app.message_tx.send(Message::Path(path)).unwrap();
-        }
+        app.message_tx.send(Message::Path(path)).unwrap();
     }
 
     if let Some(path) = match app.game {

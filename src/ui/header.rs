@@ -5,7 +5,7 @@ use crate::{
     games, themes,
 };
 
-pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
+pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &mut App) {
     ui.horizontal(|ui| {
         ui.set_height(36.0);
 
@@ -58,68 +58,58 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
                 username_job.append(&user.username, 8.0, text_format.clone());
 
                 let account_button = ui.add_enabled(!waiting, egui::Button::new(username_job));
-                let account_popup_id = account_button.id.with("popup");
-
-                let is_account_popup_open = ui.memory(|m| m.is_popup_open(account_popup_id));
-
-                if is_account_popup_open {
-                    egui::popup::popup_above_or_below_widget(
-                        ui,
-                        account_popup_id,
-                        &account_button,
-                        egui::AboveOrBelow::Below,
-                        egui::PopupCloseBehavior::CloseOnClick,
-                        |ui| {
-                            ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                            ui.visuals_mut().widgets.inactive.bg_stroke.color =
-                                ui.visuals().widgets.active.bg_stroke.color;
-
-                            let mut icon_format = egui::TextFormat::simple(
-                                egui::FontId::proportional(20.0),
-                                ui.visuals().text_color(),
-                            );
-                            icon_format.valign = egui::Align::Center;
-
-                            let mut text_format = egui::TextFormat::simple(
-                                egui::FontId::proportional(14.0),
-                                ui.visuals().text_color(),
-                            );
-                            text_format.valign = egui::Align::Center;
-
-                            let mut website_job = egui::text::LayoutJob::default();
-                            website_job.append(icons::LINK, 0.0, icon_format.clone());
-                            website_job.append("Website", 8.0, text_format.clone());
-
-                            let mut logout_job = egui::text::LayoutJob::default();
-                            logout_job.append(icons::LOGOUT_BOX_LINE, 0.0, icon_format.clone());
-                            logout_job.append("Logout", 8.0, text_format.clone());
-
-                            if ui.button(website_job).clicked() {
-                                let url = match app.state {
-                                    State::Achievements(_) => app.game.achievement_url(),
-                                    State::PullMenu | State::Pulls(_) => app.game.pull_url(),
-                                    _ => "https://stardb.gg".to_string(),
-                                };
-
-                                if let Err(e) = open::that(url) {
-                                    app.message_tx
-                                        .send(Message::Toast(egui_notify::Toast::error(format!(
-                                            "{e}"
-                                        ))))
-                                        .unwrap();
-                                }
-                            }
-
-                            if ui.button(logout_job).clicked() {
-                                app.message_tx.send(Message::Logout).unwrap();
-                            }
-                        },
-                    );
-                }
 
                 if account_button.clicked() {
-                    ui.memory_mut(|mem| mem.toggle_popup(account_popup_id));
+                    app.account_popup_open = true;
                 }
+
+                egui::Popup::from_response(&account_button).open_bool(&mut app.account_popup_open).show(
+                    |ui| {
+                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                        ui.visuals_mut().widgets.inactive.bg_stroke.color =
+                            ui.visuals().widgets.active.bg_stroke.color;
+
+                        let mut icon_format = egui::TextFormat::simple(
+                            egui::FontId::proportional(20.0),
+                            ui.visuals().text_color(),
+                        );
+                        icon_format.valign = egui::Align::Center;
+
+                        let mut text_format = egui::TextFormat::simple(
+                            egui::FontId::proportional(14.0),
+                            ui.visuals().text_color(),
+                        );
+                        text_format.valign = egui::Align::Center;
+
+                        let mut website_job = egui::text::LayoutJob::default();
+                        website_job.append(icons::LINK, 0.0, icon_format.clone());
+                        website_job.append("Website", 8.0, text_format.clone());
+
+                        let mut logout_job = egui::text::LayoutJob::default();
+                        logout_job.append(icons::LOGOUT_BOX_LINE, 0.0, icon_format.clone());
+                        logout_job.append("Logout", 8.0, text_format.clone());
+
+                        if ui.button(website_job).clicked() {
+                            let url = match app.state {
+                                State::Achievements(_) => app.game.achievement_url(),
+                                State::PullMenu | State::Pulls(_) => app.game.pull_url(),
+                                _ => "https://stardb.gg".to_string(),
+                            };
+
+                            if let Err(e) = open::that(url) {
+                                app.message_tx
+                                    .send(Message::Toast(egui_notify::Toast::error(format!(
+                                        "{e}"
+                                    ))))
+                                    .unwrap();
+                            }
+                        }
+
+                        if ui.button(logout_job).clicked() {
+                            app.message_tx.send(Message::Logout).unwrap();
+                        }
+                    },
+                );
 
                 account_button.rect.height()
             } else {
@@ -168,61 +158,51 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
             );
             let button = button.min_size(egui::vec2(48.0, height));
 
-            let color_button = ui.add(button);
-            let color_popup_id = color_button.id.with("popup");
+            let theme_button = ui.add(button);
 
-            let is_color_popup_open = ui.memory(|m| m.is_popup_open(color_popup_id));
-
-            if is_color_popup_open {
-                egui::popup::popup_above_or_below_widget(
-                    ui,
-                    color_popup_id,
-                    &color_button,
-                    egui::AboveOrBelow::Below,
-                    egui::PopupCloseBehavior::CloseOnClick,
-                    |ui| {
-                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                        ui.visuals_mut().widgets.inactive.bg_stroke.color =
-                            ui.visuals().widgets.active.bg_stroke.color;
-
-                        let mut icon_format = egui::TextFormat::simple(
-                            egui::FontId::proportional(20.0),
-                            ui.visuals().text_color(),
-                        );
-                        icon_format.valign = egui::Align::Center;
-
-                        let mut text_format = egui::TextFormat::simple(
-                            egui::FontId::proportional(14.0),
-                            ui.visuals().text_color(),
-                        );
-                        text_format.valign = egui::Align::Center;
-
-                        let mut dark_job = egui::text::LayoutJob::default();
-                        dark_job.append(icons::MOON_LINE, 0.0, icon_format.clone());
-                        dark_job.append("Dark", 8.0, text_format.clone());
-
-                        let mut light_job = egui::text::LayoutJob::default();
-                        light_job.append(icons::SUN_LINE, 0.0, icon_format.clone());
-                        light_job.append("Light", 8.0, text_format.clone());
-
-                        let mut classic_job = egui::text::LayoutJob::default();
-                        classic_job.append(icons::BARD_LINE, 0.0, icon_format.clone());
-                        classic_job.append("Classic", 8.0, text_format.clone());
-
-                        let mut theme = app.theme;
-
-                        ui.selectable_value(&mut theme, themes::Theme::Dark, dark_job);
-                        ui.selectable_value(&mut theme, themes::Theme::Light, light_job);
-                        ui.selectable_value(&mut theme, themes::Theme::Classic, classic_job);
-
-                        app.message_tx.send(Message::Theme(theme)).unwrap();
-                    },
-                );
+            if theme_button.clicked() {
+                app.theme_popup_open = true;
             }
 
-            if color_button.clicked() {
-                ui.memory_mut(|mem| mem.toggle_popup(color_popup_id));
-            }
+            egui::Popup::from_response(&theme_button).open_bool(&mut app.theme_popup_open).show(
+                |ui| {
+                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                    ui.visuals_mut().widgets.inactive.bg_stroke.color =
+                        ui.visuals().widgets.active.bg_stroke.color;
+
+                    let mut icon_format = egui::TextFormat::simple(
+                        egui::FontId::proportional(20.0),
+                        ui.visuals().text_color(),
+                    );
+                    icon_format.valign = egui::Align::Center;
+
+                    let mut text_format = egui::TextFormat::simple(
+                        egui::FontId::proportional(14.0),
+                        ui.visuals().text_color(),
+                    );
+                    text_format.valign = egui::Align::Center;
+
+                    let mut dark_job = egui::text::LayoutJob::default();
+                    dark_job.append(icons::MOON_LINE, 0.0, icon_format.clone());
+                    dark_job.append("Dark", 8.0, text_format.clone());
+
+                    let mut light_job = egui::text::LayoutJob::default();
+                    light_job.append(icons::SUN_LINE, 0.0, icon_format.clone());
+                    light_job.append("Light", 8.0, text_format.clone());
+
+                    let mut classic_job = egui::text::LayoutJob::default();
+                    classic_job.append(icons::BARD_LINE, 0.0, icon_format.clone());
+                    classic_job.append("Classic", 8.0, text_format.clone());
+
+                    let mut theme = app.theme;
+
+                    ui.selectable_value(&mut theme, themes::Theme::Dark, dark_job);
+                    ui.selectable_value(&mut theme, themes::Theme::Light, light_job);
+                    ui.selectable_value(&mut theme, themes::Theme::Classic, classic_job);
+
+                    app.message_tx.send(Message::Theme(theme)).unwrap();
+                },
+            );
 
             ui.style_mut().spacing.button_padding = old_button_padding;
             let text = egui::Color32::BLACK;
@@ -256,12 +236,11 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &App) {
 
             let button = egui::Button::new(lootbar_job);
 
-            if ui.add(button).clicked() {
-                if let Err(e) = open::that("https://lootbar.gg/index?utm_source=Affiliate&utm_medium=Affiliate&utm_campaign=lHBYqExxGc") {
+            if ui.add(button).clicked() &&  
+                let Err(e) = open::that("https://lootbar.gg/index?utm_source=Affiliate&utm_medium=Affiliate&utm_campaign=lHBYqExxGc") {
                     app.message_tx
                         .send(Message::Toast(egui_notify::Toast::error(format!("{e}"))))
                         .unwrap();
-                }
             }
         });
     });
