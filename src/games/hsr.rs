@@ -32,19 +32,24 @@ pub fn sniff(
                 continue;
             };
 
-            if command.command_id != command_id::GetQuestDataScRsp {
-                continue;
-            }
-
-            let Ok(quest_data) =
-                command.parse_proto::<proto::GetQuestDataScRsp::GetQuestDataScRsp>()
-            else {
+            let Ok(quests) = (match command.command_id {
+                command_id::GetQuestDataScRsp => command
+                    .parse_proto::<proto::GetQuestDataScRsp::GetQuestDataScRsp>()
+                    .map(|p| p.quest_list),
+                command_id::BatchGetQuestDataScRsp => command
+                    .parse_proto::<proto::BatchGetQuestDataScRsp::BatchGetQuestDataScRsp>()
+                    .map(|p| p.quest_list),
+                command_id::PlayerSyncScNotify => command
+                    .parse_proto::<proto::PlayerSyncScNotify::PlayerSyncScNotify>()
+                    .map(|p| p.quest_list),
+                _ => continue,
+            }) else {
                 continue;
             };
 
             tracing::info!("Found achievement packet");
 
-            for quest in quest_data.quest_list {
+            for quest in quests {
                 if achievement_ids.contains(&quest.id)
                     && (quest.status.value() == 2 || quest.status.value() == 3)
                 {
