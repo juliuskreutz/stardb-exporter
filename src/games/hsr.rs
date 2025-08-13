@@ -6,8 +6,11 @@ use std::{
     sync::mpsc,
 };
 
-use auto_reliquary::{GamePacket, GameSniffer, matches_achievement_packet};
 use base64::prelude::*;
+use reliquary::network::{
+    GamePacket, GameSniffer,
+    command::{command_id, proto},
+};
 
 pub fn sniff(
     achievement_ids: &[u32],
@@ -20,25 +23,37 @@ pub fn sniff(
     let mut achievements = Vec::new();
 
     while let Ok(data) = device_rx.recv() {
-        let Some(GamePacket::Commands(commands)) = sniffer.receive_packet(data) else {
+        let Ok(packets) = sniffer.receive_packet(data) else {
             continue;
         };
 
-        for command in commands {
-            if let Some(read_achievements) = matches_achievement_packet(&command) {
-                tracing::info!("Found achievement packet");
+        for packet in packets {
+            let GamePacket::Commands(Ok(command)) = packet else {
+                continue;
+            };
 
-                if !achievements.is_empty() {
-                    continue;
-                }
+            if command.command_id != command_id::GetQuestDataScRsp {
+                continue;
+            }
 
-                for achievement in read_achievements {
-                    if achievement_ids.contains(&achievement.id)
-                        && (achievement.status == 2 || achievement.status == 3)
-                    {
-                        achievements.push(achievement.id);
-                    }
+            let Ok(quest_data) =
+                command.parse_proto::<proto::GetQuestDataScRsp::GetQuestDataScRsp>()
+            else {
+                continue;
+            };
+
+            tracing::info!("Found achievement packet");
+
+            for quest in quest_data.quest_list {
+                if achievement_ids.contains(&quest.id)
+                    && (quest.status.value() == 2 || quest.status.value() == 3)
+                {
+                    achievements.push(quest.id);
                 }
+            }
+
+            if !achievements.is_empty() {
+                break;
             }
         }
 
