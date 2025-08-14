@@ -145,7 +145,7 @@ impl Game {
             let mut capture = pcap::Capture::from_device(device.clone())?
                 .immediate_mode(true)
                 .promisc(true)
-                .timeout(0)
+                .buffer_size(1024 * 1024 * 16) // 16MB
                 .open()?;
 
             capture.filter(packet_filer, true)?;
