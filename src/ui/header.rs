@@ -236,7 +236,7 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &mut App) {
 
             let button = egui::Button::new(lootbar_job);
 
-            if ui.add(button).clicked() &&  
+            if ui.add(button).clicked() &&
                 let Err(e) = open::that("https://lootbar.gg/index?utm_source=Affiliate&utm_medium=Affiliate&utm_campaign=lHBYqExxGc") {
                     app.message_tx
                         .send(Message::Toast(egui_notify::Toast::error(format!("{e}"))))
