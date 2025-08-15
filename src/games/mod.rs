@@ -87,7 +87,6 @@ impl Game {
         };
 
         format!("https://stardb.gg/{prefix}achievement-tracker")
-        }
     }
 
     pub fn pull_url(self) -> String {
