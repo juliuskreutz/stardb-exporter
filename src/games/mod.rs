@@ -82,11 +82,12 @@ impl Game {
     pub fn achievement_url(self) -> String {
         let prefix = match self {
             Game::Hsr => "",
-            Game::Gi => "genshin",
-            Game::Zzz => "zzz",
+            Game::Gi => "genshin/",
+            Game::Zzz => "zzz/",
         };
 
-        format!("https://stardb.gg/{prefix}/achievement-tracker")
+        format!("https://stardb.gg/{prefix}achievement-tracker")
+        }
     }
 
     pub fn pull_url(self) -> String {
