@@ -86,7 +86,7 @@ impl Game {
             Game::Zzz => "zzz/",
         };
 
-            format!("https://stardb.gg/{prefix}achievement-tracker", prefix)
+        format!("https://stardb.gg/{prefix}achievement-tracker")
         }
     }
 
