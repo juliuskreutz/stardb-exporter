@@ -86,7 +86,11 @@ impl Game {
             Game::Zzz => "zzz",
         };
 
-        format!("https://stardb.gg/{prefix}/achievement-tracker")
+        if prefix.is_empty() {
+            "https://stardb.gg/achievement-tracker".to_string()
+        } else {
+            format!("https://stardb.gg/{}/achievement-tracker", prefix)
+        }
     }
 
     pub fn pull_url(self) -> String {
