@@ -1,8 +1,5 @@
 # stardb-exporter
 
-> [!CAUTION]
-> HSR Achievement Exporter is not working as of the `2025-08-13`!
-
 ## Instructions
 
 This method will not work on any kind of VPN
