@@ -8,6 +8,11 @@ use std::{
     thread,
 };
 
+#[cfg(not(any(feature = "pktmon", feature = "pcap")))]
+compile_error!("at least one of the features \"pktmon\" or \"pcap\" must be enabled");
+#[cfg(all(feature = "pktmon", feature = "pcap"))]
+compile_error!("at most one of the features \"pktmon\" or \"pcap\" must be enabled");
+
 use crate::app::{Message, State};
 use regex::Regex;
 
@@ -33,21 +38,30 @@ impl Game {
                 }
             };
 
-            let devices = match self.devices() {
-                Ok(devices) => devices,
-                Err(e) => {
-                    message_tx
-                        .send(Message::GoTo(State::Error(e.to_string())))
-                        .unwrap();
-                    return;
-                }
-            };
-
             let (device_tx, device_rx) = mpsc::channel();
-            for (i, device) in devices.into_iter().enumerate() {
+            #[cfg(feature = "pcap")]
+            {
+                let devices = match self.devices() {
+                    Ok(devices) => devices,
+                    Err(e) => {
+                        message_tx
+                            .send(Message::GoTo(State::Error(e.to_string())))
+                            .unwrap();
+                        return;
+                    }
+                };
+
+                for (i, device) in devices.into_iter().enumerate() {
+                    let device_tx = device_tx.clone();
+                    let message_tx = message_tx.clone();
+                    std::thread::spawn(move || self.capture_device_pcap(i, device, &device_tx, &message_tx));
+                }
+            }
+            #[cfg(feature = "pktmon")]
+            {
                 let device_tx = device_tx.clone();
                 let message_tx = message_tx.clone();
-                std::thread::spawn(move || self.capture_device(i, device, &device_tx, &message_tx));
+                std::thread::spawn(move || self.capture_device_pktmon(&device_tx, &message_tx));
             }
 
             let achievements = match self {
@@ -117,6 +131,7 @@ impl Game {
         Ok(achievement_ids)
     }
 
+    #[cfg(feature = "pcap")]
     fn devices(self) -> anyhow::Result<Vec<pcap::Device>> {
         Ok(pcap::Device::list()?
             .into_iter()
@@ -126,7 +141,8 @@ impl Game {
             .collect())
     }
 
-    fn capture_device(
+    #[cfg(feature = "pcap")]
+    fn capture_device_pcap(
         self,
         i: usize,
         device: pcap::Device,
@@ -139,6 +155,7 @@ impl Game {
             _ => unimplemented!(),
         };
 
+        tracing::info!("Running exporter with pcap...");
         tracing::debug!("Finding devices...");
 
         loop {
@@ -187,6 +204,74 @@ impl Game {
                 }))
                 .unwrap();
             tracing::info!("Device {i} Error. Starting up again...");
+        }
+    }
+
+    #[cfg(feature = "pktmon")]
+    fn capture_device_pktmon(
+        self,
+        device_tx: &mpsc::Sender<Vec<u8>>,
+        message_tx: &mpsc::Sender<Message>,
+    ) -> anyhow::Result<()> {
+        let port_range = match self {
+            Game::Hsr => (23301, 23302),
+            Game::Gi => (22101, 22102),
+            _ => unimplemented!(),
+        };
+        // let packet_filter = format!("udp portrange {}-{}", port_range.0, port_range.1);
+
+        tracing::info!("Running exporter with pktmon...");
+
+        loop {
+            let mut capture = pktmon::Capture::new()?;
+
+            vec![port_range.0, port_range.1].into_iter().map(|port|
+                pktmon::filter::PktMonFilter {
+                    name: "UDP Filter".to_string(),
+                    transport_protocol: Some(pktmon::filter::TransportProtocol::UDP),
+                    port: port.into(),
+                    ..pktmon::filter::PktMonFilter::default()
+                }
+            ).for_each(|filter| {
+                capture.add_filter(filter).unwrap();
+            });
+
+            message_tx
+                .send(Message::Toast({
+                    let mut toast = egui_notify::Toast::success("Capture Ready~!".to_string());
+                    toast.duration(None);
+                    toast
+                }))
+                .unwrap();
+
+            message_tx
+                .send(Message::GoTo(State::Waiting("Running".to_string())))
+                .unwrap();
+            tracing::info!("Capture Ready~!");
+
+            let mut has_captured = false;
+            capture.start().unwrap();
+
+            loop {
+                match capture.next_packet_timeout(std::time::Duration::from_secs(1)) {
+                    Ok(packet) => {
+                        device_tx.send(packet.payload.to_vec().clone())?;
+                        has_captured = true;
+                    }
+                    Err(mpsc::RecvTimeoutError::Timeout) => {has_captured = true; continue},
+                    Err(_) if !has_captured => break,
+                    Err(e) => return Err(anyhow::anyhow!("{e}")),
+                }
+            }
+
+            message_tx
+                .send(Message::Toast({
+                    let mut toast = egui_notify::Toast::error("Capture Error. Starting up again...".to_string());
+                    toast.duration(None);
+                    toast
+                }))
+                .unwrap();
+            tracing::info!("Capture Error. Starting up again...");
         }
     }
 }
