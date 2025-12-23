@@ -1,5 +1,7 @@
 #![windows_subsystem = "windows"]
 
+#[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
+use std::env;
 mod app;
 mod games;
 mod themes;
@@ -9,6 +11,12 @@ const APP_ID: &str = "Stardb Exporter";
 
 fn main() -> anyhow::Result<()> {
     let _guard = tracing_init()?;
+
+    #[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
+    if !unsafe { windows::Win32::UI::Shell::IsUserAnAdmin().into() } {
+        tracing::info!("Asking for admin permissions...");
+        escalate_to_admin().expect("Error: failed to escalate privileges for pktmon version");
+    }
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -45,4 +53,48 @@ fn tracing_init() -> anyhow::Result<tracing_appender::non_blocking::WorkerGuard>
     tracing::info!("Tracing initialized and logging to file.");
 
     Ok(guard)
+}
+
+#[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
+fn escalate_to_admin() -> Result<(), Box<dyn std::error::Error>> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows::core::w;
+    use windows::core::PCWSTR;
+    use windows::Win32::System::Console::GetConsoleWindow;
+    use windows::Win32::UI::Shell::{
+        ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SEE_MASK_NO_CONSOLE, SHELLEXECUTEINFOW,
+    };
+    use windows::Win32::UI::WindowsAndMessaging::{GetWindow, GW_OWNER, SW_SHOWNORMAL};
+
+    let args_str = env::args().skip(1).collect::<Vec<_>>().join(" ");
+
+    let exe_path = env::current_exe()
+        .expect("Failed to get current exe")
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect::<Vec<_>>();
+    let args = args_str.encode_utf16().chain(Some(0)).collect::<Vec<_>>();
+
+    unsafe {
+        let mut options = SHELLEXECUTEINFOW {
+            cbSize: size_of::<SHELLEXECUTEINFOW>() as u32,
+            fMask: SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
+            hwnd: GetWindow(GetConsoleWindow(), GW_OWNER).unwrap_or(GetConsoleWindow()),
+            lpVerb: w!("runas"),
+            lpFile: PCWSTR(exe_path.as_ptr()),
+            lpParameters: PCWSTR(args.as_ptr()),
+            lpDirectory: PCWSTR::null(),
+            nShow: SW_SHOWNORMAL.0,
+            lpIDList: std::ptr::null_mut(),
+            lpClass: PCWSTR::null(),
+            dwHotKey: 0,
+            ..Default::default()
+        };
+
+        ShellExecuteExW(&mut options)?;
+    };
+
+    // Exit the current process since we launched a new elevated one
+    std::process::exit(0);
 }

@@ -22,10 +22,19 @@ jobs:
           curl https://npcap.com/dist/npcap-sdk-1.15.zip -o sdk.zip
           unzip sdk.zip
 
-      - name: Clippy
+      - name: Clippy on npcap ver
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          args: --no-default-features --features pcap
+        env:
+          LIB: ${{ github.workspace }}/Lib/x64/
+
+      - name: Clippy on pktmon ver
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --no-default-features --features pktmon
         env:
           LIB: ${{ github.workspace }}/Lib/x64/
 
