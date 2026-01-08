@@ -24,19 +24,39 @@ jobs:
           curl https://npcap.com/dist/npcap-sdk-1.15.zip -o sdk.zip
           unzip sdk.zip
 
-      - name: Build
+      - name: Build npcap version
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --no-default-features --features pcap
         env:
           LIB: ${{ github.workspace }}/Lib/x64/
+
+      - name: Move pcap exe
+        run: mv -Force target/release/stardb-exporter.exe target/release/stardb-exporter-pcap.exe
+
+      - name: Build pktmon version
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --no-default-features --features pktmon
+        env:
+          LIB: ${{ github.workspace }}/Lib/x64/
+
+      - name: Move pktmon exe
+        run: mv -Force target/release/stardb-exporter.exe target/release/stardb-exporter-pktmon.exe
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows
-          path: target/release/stardb-exporter.exe
+          name: windows-pcap
+          path: target/release/stardb-exporter-pcap.exe
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-pktmon
+          path: target/release/stardb-exporter-pktmon.exe
 
   build-linux:
     name: Build Linux
@@ -117,8 +137,10 @@ jobs:
 
       - name: Rename
         run: |
-          cp windows/stardb-exporter.exe stardb-exporter.exe
+          cp windows-pcap/stardb-exporter-pcap.exe stardb-exporter.exe
           zip stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip stardb-exporter.exe
+          cp windows-pktmon/stardb-exporter-pktmon.exe stardb-exporter-pktmon.exe
+          zip stardb-exporter-pktmon-v${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip stardb-exporter-pktmon.exe
           cp linux/stardb-exporter stardb-exporter
           cp stardb-exporter stardb-exporter-linux
           zip stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip stardb-exporter
@@ -135,8 +157,10 @@ jobs:
           title: v${{ steps.cargo-get.outputs.metadata }} Release
           files: |
             stardb-exporter.exe
+            stardb-exporter-pktmon.exe
             stardb-exporter-linux
             stardb-exporter-macos
             stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip
+            stardb-exporter-pktmon-v${{ steps.cargo-get.outputs.metadata }}-x86_64-pc-windows-msvc.zip
             stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-unknown-linux-gnu.zip
             stardb-exporter-v${{ steps.cargo-get.outputs.metadata }}-x86_64-apple-darwin.zip

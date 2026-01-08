@@ -259,7 +259,7 @@ fn update(message_tx: &mpsc::Sender<Message>) {
         let status = self_update::backends::github::Update::configure()
             .repo_owner("juliuskreutz")
             .repo_name("stardb-exporter")
-            .bin_name("stardb-exporter")
+            .bin_name(if cfg!(all(windows, feature = "pktmon")) {"stardb-exporter-pktmon"} else {"stardb-exporter"})
             .current_version(self_update::cargo_crate_version!())
             .no_confirm(true)
             .build()
