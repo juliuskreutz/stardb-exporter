@@ -8,26 +8,26 @@ anyhow = "1.0.100"
 arboard = "3.6.1"
 auto-artifactarium = { git = "https://github.com/hashblen/auto-artifactarium", version = "1.1.0" }
 base64 = "0.22.1"
-eframe = { version = "0.33.0", features = ["persistence"] }
-egui = "0.33.0"
+eframe = { version = "0.33.3", features = ["persistence"] }
+egui = "0.33.3"
 egui-notify = "0.21.0"
-egui_extras = { version = "0.33.0", features = ["all_loaders"] }
-pcap = { version = "2.3.0", optional = true }
+egui_extras = { version = "0.33.3", features = ["all_loaders"] }
+pcap = { version = "2.4.0", optional = true }
 regex = "1.12.2"
 auto-reliquary = { git = "https://github.com/hashblen/auto-reliquary", version = "1.1.0" }
-rfd = "0.15.4"
+rfd = "0.17.1"
 self_update = { version = "0.42.0", features = [
     "archive-zip",
     "compression-zip-deflate",
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
-ureq = { version = "3.1.2", features = ["json"] }
-egui-remixicon = "0.31.1"
-open = "5.3.2"
-tracing = "0.1.41"
-tracing-subscriber = "0.3.20"
-tracing-appender = "0.2.3"
+serde_json = "1.0.149"
+ureq = { version = "3.1.4", features = ["json"] }
+egui-remixicon = "0.33.1"
+open = "5.3.3"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"
+tracing-appender = "0.2.4"
 pktmon = { version = "0.6.2", optional = true }
 windows = { version = "0.62.2", features = [
     "Win32_UI_Shell",
@@ -38,9 +38,8 @@ windows = { version = "0.62.2", features = [
 ], optional = true }
 
 [build-dependencies]
-winresource = "0.1.27"
+winresource = "0.1.28"
 
 [features]
 pktmon = ["dep:pktmon", "dep:windows"]
 pcap = ["dep:pcap"]
-
