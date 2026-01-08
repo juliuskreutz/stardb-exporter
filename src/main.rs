@@ -58,13 +58,13 @@ fn tracing_init() -> anyhow::Result<tracing_appender::non_blocking::WorkerGuard>
 #[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
 fn escalate_to_admin() -> Result<(), Box<dyn std::error::Error>> {
     use std::os::windows::ffi::OsStrExt;
-    use windows::core::w;
-    use windows::core::PCWSTR;
     use windows::Win32::System::Console::GetConsoleWindow;
     use windows::Win32::UI::Shell::{
-        ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SEE_MASK_NO_CONSOLE, SHELLEXECUTEINFOW,
+        SEE_MASK_NO_CONSOLE, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW, ShellExecuteExW,
     };
-    use windows::Win32::UI::WindowsAndMessaging::{GetWindow, GW_OWNER, SW_SHOWNORMAL};
+    use windows::Win32::UI::WindowsAndMessaging::{GW_OWNER, GetWindow, SW_SHOWNORMAL};
+    use windows::core::PCWSTR;
+    use windows::core::w;
 
     let args_str = env::args().skip(1).collect::<Vec<_>>().join(" ");
 

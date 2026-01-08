@@ -54,7 +54,9 @@ impl Game {
                 for (i, device) in devices.into_iter().enumerate() {
                     let device_tx = device_tx.clone();
                     let message_tx = message_tx.clone();
-                    std::thread::spawn(move || self.capture_device_pcap(i, device, &device_tx, &message_tx));
+                    std::thread::spawn(move || {
+                        self.capture_device_pcap(i, device, &device_tx, &message_tx)
+                    });
                 }
             }
             #[cfg(feature = "pktmon")]
@@ -225,16 +227,17 @@ impl Game {
         loop {
             let mut capture = pktmon::Capture::new()?;
 
-            vec![port_range.0, port_range.1].into_iter().map(|port|
-                pktmon::filter::PktMonFilter {
+            vec![port_range.0, port_range.1]
+                .into_iter()
+                .map(|port| pktmon::filter::PktMonFilter {
                     name: "UDP Filter".to_string(),
                     transport_protocol: Some(pktmon::filter::TransportProtocol::UDP),
                     port: port.into(),
                     ..pktmon::filter::PktMonFilter::default()
-                }
-            ).for_each(|filter| {
-                capture.add_filter(filter).unwrap();
-            });
+                })
+                .for_each(|filter| {
+                    capture.add_filter(filter).unwrap();
+                });
 
             message_tx
                 .send(Message::Toast({
@@ -258,7 +261,10 @@ impl Game {
                         device_tx.send(packet.payload.to_vec().clone())?;
                         has_captured = true;
                     }
-                    Err(mpsc::RecvTimeoutError::Timeout) => {has_captured = true; continue},
+                    Err(mpsc::RecvTimeoutError::Timeout) => {
+                        has_captured = true;
+                        continue;
+                    }
                     Err(_) if !has_captured => break,
                     Err(e) => return Err(anyhow::anyhow!("{e}")),
                 }
@@ -266,7 +272,9 @@ impl Game {
 
             message_tx
                 .send(Message::Toast({
-                    let mut toast = egui_notify::Toast::error("Capture Error. Starting up again...".to_string());
+                    let mut toast = egui_notify::Toast::error(
+                        "Capture Error. Starting up again...".to_string(),
+                    );
                     toast.duration(None);
                     toast
                 }))

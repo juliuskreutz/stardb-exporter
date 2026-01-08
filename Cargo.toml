@@ -28,7 +28,7 @@ open = "5.3.2"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.20"
 tracing-appender = "0.2.3"
-pktmon = { version = "0.6.2", optional = true  }
+pktmon = { version = "0.6.2", optional = true }
 windows = { version = "0.62.2", features = [
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
@@ -41,6 +41,6 @@ windows = { version = "0.62.2", features = [
 winresource = "0.1.27"
 
 [features]
-default = ["pcap"]
 pktmon = ["dep:pktmon", "dep:windows"]
 pcap = ["dep:pcap"]
+

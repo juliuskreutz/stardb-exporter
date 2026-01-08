@@ -17,6 +17,12 @@ jobs:
           toolchain: stable
           components: clippy
 
+      - name: Clippy on pktmon ver
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features pktmon
+
       - name: Get Npcap Sdk
         run: |
           curl https://npcap.com/dist/npcap-sdk-1.15.zip -o sdk.zip
@@ -26,15 +32,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --no-default-features --features pcap
-        env:
-          LIB: ${{ github.workspace }}/Lib/x64/
-
-      - name: Clippy on pktmon ver
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --no-default-features --features pktmon
+          args: --features pcap
         env:
           LIB: ${{ github.workspace }}/Lib/x64/
 
@@ -56,6 +54,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          args: --features pcap
 
   clippy-macos:
     name: Clippy Macos
@@ -75,3 +74,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          args: --features pcap
