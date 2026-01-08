@@ -2,22 +2,28 @@
 
 ## Instructions
 
+### Improved Windows Version (Thank you [@hashblen](https://github.com/hashblen)):
+
+This version does not need pcap or anything installed extra.
+
+Just [download](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter-pktmon.exe) it and run it :D.
+
+### Pcap Version
+
 This method will not work on any kind of VPN
 
 - Download and install pcap
-
   - Windows: [Npcap Installer](https://npcap.com/#download) (Ensure `Install Npcap in WinPcap API-compatible mode` is ticked) \
     **Also ensure, that you're using the latest version of Npcap**
   - Linux: Figure it out, lol. The package should be called libpcap
   - Macos: Use brew https://formulae.brew.sh/formula/libpcap
 
 - Note for WiFi users:
-
   - Windows: During Npcap installation, ensure `Support raw 802.11 traffic (and monitor mode) for wireless adapters` is ticked.
   - Linux and Macos: Make sure you enable monitor mode for your wireless adapter.
 
 - Download the latest release:
-  - [Windows](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter.exe)
+  - [Windows](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter-pcap.exe)
   - [Linux](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter-linux)
   - [MacOs](https://github.com/juliuskreutz/stardb-exporter/releases/latest/download/stardb-exporter-macos)
 - Launch the game to the point where.
