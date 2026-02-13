@@ -30,7 +30,7 @@ jobs:
 
       - name: Get Npcap Sdk
         run: |
-          curl https://npcap.com/dist/npcap-sdk-1.15.zip -o sdk.zip
+          curl https://npcap.com/dist/npcap-sdk-1.16.zip -o sdk.zip
           unzip sdk.zip
 
       - name: Build npcap version
