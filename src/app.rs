@@ -255,17 +255,20 @@ impl eframe::App for App {
 fn update(message_tx: &mpsc::Sender<Message>) {
     let message_tx = message_tx.clone();
 
+    let name = if cfg!(all(windows, feature = "pktmon")) {
+        "stardb-exporter-pktmon"
+    } else if cfg!(all(windows, feature = "pcap")) {
+        "stardb-exporter-pcap"
+    } else {
+        "stardb-exporter"
+    };
+
     thread::spawn(move || {
         let status = self_update::backends::github::Update::configure()
             .repo_owner("juliuskreutz")
             .repo_name("stardb-exporter")
-            .bin_name(if cfg!(all(windows, feature = "pktmon")) {
-                "stardb-exporter-pktmon"
-            } else if cfg!(all(windows, feature = "pcap")) {
-                "stardb-exporter-pcap"
-            } else {
-                "stardb-exporter"
-            })
+            .identifier(name)
+            .bin_name(name)
             .current_version(self_update::cargo_crate_version!())
             .no_confirm(true)
             .build()
