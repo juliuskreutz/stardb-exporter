@@ -17,7 +17,7 @@ jobs:
           toolchain: stable
           components: clippy
 
-      - name: Clippy on pktmon ver
+      - name: Clippy Pktmon
         uses: actions-rs/cargo@v1
         with:
           command: clippy
@@ -28,7 +28,7 @@ jobs:
           curl https://npcap.com/dist/npcap-sdk-1.16.zip -o sdk.zip
           unzip sdk.zip
 
-      - name: Clippy on npcap ver
+      - name: Clippy Npcap
         uses: actions-rs/cargo@v1
         with:
           command: clippy
