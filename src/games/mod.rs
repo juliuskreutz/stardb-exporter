@@ -15,7 +15,6 @@ compile_error!("at most one of the features \"pktmon\" or \"pcap\" must be enabl
 
 use crate::app::{Message, State};
 use regex::Regex;
-use tracing::info;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Game {
@@ -136,15 +135,8 @@ impl Game {
         let achievements: Vec<Achievement> = match response {
             Ok(resp) if resp.status().is_success() => resp.into_body().read_json()?,
             _ => {
-                info!("Fetching backup {backup_url}");
+                tracing::info!("Fetching backup {backup_url}");
                 let backup_response = ureq::get(backup_url).call()?;
-                info!("Got status code {}", backup_response.status());
-                assert!(
-                    backup_response.status().is_success()
-                        || backup_response.status().is_redirection(),
-                    "status code {}",
-                    backup_response.status()
-                );
                 backup_response.into_body().read_json()?
             }
         };
