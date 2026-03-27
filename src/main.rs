@@ -1,6 +1,6 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
-#[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
+#[cfg(all(target_os = "windows", not(feature = "pcap")))]
 use std::env;
 mod app;
 mod games;
@@ -12,7 +12,7 @@ const APP_ID: &str = "Stardb Exporter";
 fn main() -> anyhow::Result<()> {
     let _guard = tracing_init()?;
 
-    #[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
+    #[cfg(all(target_os = "windows", not(feature = "pcap")))]
     if !unsafe { windows::Win32::UI::Shell::IsUserAnAdmin().into() } {
         tracing::info!("Asking for admin permissions...");
         escalate_to_admin().expect("Error: failed to escalate privileges for pktmon version");
@@ -55,7 +55,7 @@ fn tracing_init() -> anyhow::Result<tracing_appender::non_blocking::WorkerGuard>
     Ok(guard)
 }
 
-#[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
+#[cfg(all(target_os = "windows", not(feature = "pcap")))]
 fn escalate_to_admin() -> Result<(), Box<dyn std::error::Error>> {
     use std::os::windows::ffi::OsStrExt;
     use windows::Win32::System::Console::GetConsoleWindow;

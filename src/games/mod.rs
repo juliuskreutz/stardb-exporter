@@ -8,11 +8,6 @@ use std::{
     thread,
 };
 
-#[cfg(not(any(feature = "pktmon", feature = "pcap")))]
-compile_error!("at least one of the features \"pktmon\" or \"pcap\" must be enabled");
-#[cfg(all(feature = "pktmon", feature = "pcap"))]
-compile_error!("at most one of the features \"pktmon\" or \"pcap\" must be enabled");
-
 use crate::app::{Message, State};
 use regex::Regex;
 
@@ -39,7 +34,7 @@ impl Game {
             };
 
             let (device_tx, device_rx) = mpsc::channel();
-            #[cfg(feature = "pcap")]
+            #[cfg(any(not(target_os = "windows"), feature = "pcap"))]
             {
                 let devices = match self.devices() {
                     Ok(devices) => devices,
@@ -59,7 +54,7 @@ impl Game {
                     });
                 }
             }
-            #[cfg(feature = "pktmon")]
+            #[cfg(all(target_os = "windows", not(feature = "pcap")))]
             {
                 let device_tx = device_tx.clone();
                 let message_tx = message_tx.clone();
@@ -145,7 +140,7 @@ impl Game {
         Ok(achievement_ids)
     }
 
-    #[cfg(feature = "pcap")]
+    #[cfg(any(not(target_os = "windows"), feature = "pcap"))]
     fn devices(self) -> anyhow::Result<Vec<pcap::Device>> {
         Ok(pcap::Device::list()?
             .into_iter()
@@ -155,7 +150,7 @@ impl Game {
             .collect())
     }
 
-    #[cfg(feature = "pcap")]
+    #[cfg(any(not(target_os = "windows"), feature = "pcap"))]
     fn capture_device_pcap(
         self,
         i: usize,
@@ -221,7 +216,7 @@ impl Game {
         }
     }
 
-    #[cfg(feature = "pktmon")]
+    #[cfg(all(target_os = "windows", not(feature = "pcap")))]
     fn capture_device_pktmon(
         self,
         device_tx: &mpsc::Sender<Vec<u8>>,

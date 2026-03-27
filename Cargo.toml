@@ -28,18 +28,22 @@ open = "5.3.3"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
 tracing-appender = "0.2.4"
-pktmon = { version = "0.6.2", optional = true }
+
+[target.'cfg(windows)'.dependencies]
+pktmon = "0.6.2"
 windows = { version = "0.62.2", features = [
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
     "Win32_System_Registry",
     "Win32_Foundation",
     "Win32_System_Console",
-], optional = true }
+] }
+
+[target.'cfg(not(windows))'.dependencies]
+pcap = "2.4.0"
 
 [build-dependencies]
 winresource = "0.1.31"
 
 [features]
-pktmon = ["dep:pktmon", "dep:windows"]
 pcap = ["dep:pcap"]
