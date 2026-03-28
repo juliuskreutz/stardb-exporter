@@ -14,6 +14,7 @@ compile_error!("at least one of the features \"pktmon\" or \"pcap\" must be enab
 compile_error!("at most one of the features \"pktmon\" or \"pcap\" must be enabled");
 
 use crate::app::{Message, State};
+    use crate::pcapng::{get_pcapng_path, PcapngWriter};
 use regex::Regex;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -194,12 +195,21 @@ impl Game {
                 .unwrap();
             tracing::info!("Device {i} Ready~!");
 
+            let mut pcapng = get_pcapng_path()
+                .map(|p| PcapngWriter::new(p).ok())
+                .flatten();
+
             let mut has_captured = false;
 
             loop {
                 match capture.next_packet() {
                     Ok(packet) => {
                         device_tx.send(packet.data.to_vec())?;
+                        if let Some(ref mut writer) = pcapng {
+                            let ts = (packet.header.ts.tv_sec as u64 * 1_000_000_000)
+                                + (packet.header.ts.tv_usec as u64 * 1000);
+                            let _ = writer.write_packet(ts, packet.data);
+                        }
                         has_captured = true;
                     }
                     Err(_) if !has_captured => break,
@@ -264,13 +274,25 @@ impl Game {
                 .unwrap();
             tracing::info!("Capture Ready~!");
 
+            let mut pcapng = get_pcapng_path()
+                .map(|p| PcapngWriter::new(p).ok())
+                .flatten();
+
             let mut has_captured = false;
             capture.start().unwrap();
 
             loop {
                 match capture.next_packet_timeout(std::time::Duration::from_secs(1)) {
                     Ok(packet) => {
-                        device_tx.send(packet.payload.to_vec().clone())?;
+                        let payload = packet.payload.to_vec().clone();
+                        if let Some(ref mut writer) = pcapng {
+                            let ts = std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap()
+                                .as_nanos() as u64;
+                            let _ = writer.write_packet(ts, &payload);
+                        }
+                        device_tx.send(payload)?;
                         has_captured = true;
                     }
                     Err(mpsc::RecvTimeoutError::Timeout) => {

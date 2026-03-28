@@ -4,6 +4,7 @@
 use std::env;
 mod app;
 mod games;
+mod pcapng;
 mod themes;
 mod ui;
 
