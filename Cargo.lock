@@ -448,8 +448,8 @@ dependencies = [
 
 [[package]]
 name = "auto-artifactarium"
-version = "1.2.1"
-source = "git+https://github.com/hashblen/auto-artifactarium#1f4ac462d7d39c6f5e5e18c3eb51645393d9080d"
+version = "1.2.2"
+source = "git+https://github.com/hashblen/auto-artifactarium#04421c4f8a7ed7e7b65bb5e6e59231d4e98405cf"
 dependencies = [
  "base64",
  "etherparse",
@@ -1396,7 +1396,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3811,7 +3811,7 @@ dependencies = [
  "errno 0.3.14",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4372,7 +4372,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5417,7 +5417,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
