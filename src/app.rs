@@ -255,12 +255,10 @@ impl eframe::App for App {
 fn update(message_tx: &mpsc::Sender<Message>) {
     let message_tx = message_tx.clone();
 
-    let name = if cfg!(all(windows, feature = "pktmon")) {
+    let name = if cfg!(pktmon) {
         "stardb-exporter-pktmon"
-    } else if cfg!(all(windows, feature = "pcap")) {
-        "stardb-exporter-pcap"
     } else {
-        "stardb-exporter"
+        "stardb-exporter-pcap"
     };
 
     thread::spawn(move || {
