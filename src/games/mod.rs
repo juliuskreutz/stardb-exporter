@@ -14,7 +14,7 @@ compile_error!("at least one of the features \"pktmon\" or \"pcap\" must be enab
 compile_error!("at most one of the features \"pktmon\" or \"pcap\" must be enabled");
 
 use crate::app::{Message, State};
-    use crate::pcapng::{get_pcapng_path, PcapngWriter};
+use crate::pcapng::{PcapngWriter, get_pcapng_path};
 use regex::Regex;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -195,9 +195,7 @@ impl Game {
                 .unwrap();
             tracing::info!("Device {i} Ready~!");
 
-            let mut pcapng = get_pcapng_path()
-                .map(|p| PcapngWriter::new(p).ok())
-                .flatten();
+            let mut pcapng = get_pcapng_path().and_then(|p| PcapngWriter::new(p).ok());
 
             let mut has_captured = false;
 
