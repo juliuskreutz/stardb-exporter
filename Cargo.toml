@@ -41,5 +41,6 @@ windows = { version = "0.62.2", features = [
 winresource = "0.1.31"
 
 [features]
+wayland-data-control = ["arboard/wayland-data-control"]
 pktmon = ["dep:pktmon", "dep:windows"]
 pcap = ["dep:pcap"]
