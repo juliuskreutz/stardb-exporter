@@ -1,12 +1,13 @@
 [package]
 name = "stardb-exporter"
-version = "2.22.0"
+version = "2.23.0"
 edition = "2024"
 
 [dependencies]
 anyhow = "1.0.102"
 arboard = "3.6.1"
 auto-artifactarium = { git = "https://github.com/hashblen/auto-artifactarium", version = "1.2.2" }
+auto-discipher = { git = "https://github.com/hashblen/auto-discipher", version = "1.0.0" }
 base64 = "0.22.1"
 eframe = { version = "0.33.3", features = ["persistence"] }
 egui = "0.33.3"
@@ -21,7 +22,7 @@ self_update = { version = "0.43.1", features = [
     "compression-zip-deflate",
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
+serde_json = { version = "1.0.149", features = ["preserve_order"] }
 ureq = { version = "3.3.0", features = ["json"] }
 egui-remixicon = "0.33.1"
 open = "5.3.4"

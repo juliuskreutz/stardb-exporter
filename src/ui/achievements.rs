@@ -9,7 +9,7 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
     let key = match app.game {
         games::Game::Hsr => "hsr_achievements",
         games::Game::Gi => "gi_achievements",
-        _ => unimplemented!(),
+        games::Game::Zzz => "zzz_achievements",
     };
 
     ui.label("Finished");
@@ -48,7 +48,7 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
         let prefix = match app.game {
             games::Game::Hsr => "",
             games::Game::Gi => "gi/",
-            _ => unimplemented!(),
+            games::Game::Zzz => "zzz/",
         };
 
         let url = format!("https://stardb.gg/api/users/me/{prefix}achievements/completed");

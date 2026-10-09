@@ -12,7 +12,7 @@ use base64::prelude::*;
 use regex::Regex;
 
 pub fn sniff(
-    achievement_ids: &[u32],
+    achievement_ids: &[(u32, bool)],
     device_rx: &mpsc::Receiver<Vec<u8>>,
 ) -> anyhow::Result<Vec<u32>> {
     let keys = load_keys()?;
@@ -34,7 +34,7 @@ pub fn sniff(
                 }
 
                 for achievement in read_achievements {
-                    if achievement_ids.contains(&achievement.id)
+                    if achievement_ids.iter().any(|(id, _)| *id == achievement.id)
                         && (achievement.status == 2 || achievement.status == 3)
                     {
                         achievements.push(achievement.id);
