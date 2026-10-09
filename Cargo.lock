@@ -462,6 +462,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "auto-discipher"
+version = "1.0.0"
+source = "git+https://github.com/hashblen/auto-discipher#bfbbac6bc80857ab14a0f9cd59a71f60815f90b2"
+dependencies = [
+ "base64",
+ "etherparse",
+ "kcp",
+ "protobuf",
+ "protobuf-codegen",
+ "rand_mt",
+ "rsa",
+ "tracing",
+]
+
+[[package]]
 name = "auto-reliquary"
 version = "1.2.0"
 source = "git+https://github.com/hashblen/auto-reliquary#bc23b48cb3b1b994a5d4405cefea42eb0e1d3735"
@@ -4053,6 +4068,7 @@ version = "1.0.149"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86"
 dependencies = [
+ "indexmap",
  "itoa",
  "memchr",
  "serde",
@@ -4322,11 +4338,12 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "stardb-exporter"
-version = "2.22.0"
+version = "2.23.0"
 dependencies = [
  "anyhow",
  "arboard",
  "auto-artifactarium",
+ "auto-discipher",
  "auto-reliquary",
  "base64",
  "eframe",

@@ -70,7 +70,7 @@ impl Game {
             let achievements = match self {
                 Game::Hsr => hsr::sniff(&achievement_ids, &device_rx),
                 Game::Gi => gi::sniff(&achievement_ids, &device_rx),
-                _ => unimplemented!(),
+                Game::Zzz => zzz::sniff(&achievement_ids, &device_rx),
             };
             let achievements = match achievements {
                 Ok(achievements) => achievements,
@@ -116,16 +116,23 @@ impl Game {
         format!("https://stardb.gg/{path}")
     }
 
-    fn achievement_ids(self) -> anyhow::Result<Vec<u32>> {
+    /// The achievement ids, with the arcade ones flagged.
+    ///
+    /// ZZZ detection matches the ids on the wire against this set and needs
+    /// the arcade subset to tell its two achievement packets apart. The other
+    /// games have one packet and leave the flag unused.
+    fn achievement_ids(self) -> anyhow::Result<Vec<(u32, bool)>> {
         #[derive(serde::Deserialize)]
         struct Achievement {
             id: u32,
+            #[serde(default)]
+            arcade: bool,
         }
 
         let path = match self {
             Game::Hsr => "/api/achievements",
             Game::Gi => "/api/gi/achievements",
-            _ => unimplemented!(),
+            Game::Zzz => "/api/zzz/achievements",
         };
 
         let url = format!("https://stardb.gg{path}");
@@ -141,7 +148,7 @@ impl Game {
                 backup_response.into_body().read_json()?
             }
         };
-        let achievement_ids: Vec<_> = achievements.into_iter().map(|a| a.id).collect();
+        let achievement_ids = achievements.into_iter().map(|a| (a.id, a.arcade)).collect();
 
         Ok(achievement_ids)
     }
@@ -167,7 +174,7 @@ impl Game {
         let packet_filer = match self {
             Game::Hsr => "udp portrange 23301-23302",
             Game::Gi => "udp portrange 22101-22102",
-            _ => unimplemented!(),
+            Game::Zzz => "udp portrange 20501-20502",
         };
 
         tracing::info!("Running exporter with pcap...");
@@ -238,7 +245,7 @@ impl Game {
         let port_range = match self {
             Game::Hsr => (23301, 23302),
             Game::Gi => (22101, 22102),
-            _ => unimplemented!(),
+            Game::Zzz => (20501, 20502),
         };
         // let packet_filter = format!("udp portrange {}-{}", port_range.0, port_range.1);
 

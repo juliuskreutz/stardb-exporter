@@ -34,6 +34,15 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
             }
         }
         games::Game::Zzz => {
+            ui.colored_label(ui.visuals().hyperlink_color, format!("{} Make sure, that you fresh started the game before using the achievement exporter!!", icons::INFORMATION_LINE));
+
+            if ui.button("Achievement Exporter").clicked() {
+                app.game.achievements(&app.message_tx);
+                app.message_tx
+                    .send(Message::GoTo(State::Waiting("Preparing".to_string())))
+                    .unwrap();
+            }
+
             if ui.button("Signal Exporter").clicked() {
                 app.message_tx.send(Message::GoTo(State::PullMenu)).unwrap();
             }
