@@ -42,12 +42,18 @@ impl PcapngWriter {
         let mut block = Vec::new();
         block.extend_from_slice(&0x00000001_u32.to_le_bytes());
 
-        let total_len: u32 = 24;
+        let total_len: u32 = 32;
         block.extend_from_slice(&total_len.to_le_bytes());
 
         block.extend_from_slice(&1_u16.to_le_bytes());
         block.extend_from_slice(&0_u16.to_le_bytes());
         block.extend_from_slice(&65536_u32.to_le_bytes());
+
+        // if_tsresol = 9: packets are stamped in nanoseconds. Without it readers
+        // assume microseconds and every timestamp comes out 1000x too large.
+        block.extend_from_slice(&9_u16.to_le_bytes());
+        block.extend_from_slice(&1_u16.to_le_bytes());
+        block.extend_from_slice(&[9, 0, 0, 0]);
 
         block.extend_from_slice(&0_u32.to_le_bytes());
 

@@ -1,12 +1,18 @@
 use std::{
+    collections::HashSet,
     fs::File,
     io::{BufRead, BufReader},
     path::PathBuf,
     sync::mpsc,
+    time::{Duration, Instant},
 };
 
 use auto_discipher::{GamePacket, GameSniffer};
 use base64::prelude::*;
+
+/// How long to keep listening for the second achievement list once the first
+/// one is in.
+const SECOND_LIST_GRACE: Duration = Duration::from_secs(10);
 
 pub fn sniff(
     achievement_ids: &[(u32, bool)],
@@ -18,38 +24,75 @@ pub fn sniff(
         .set_initial_keys(keys)
         .set_achievement_ids(achievement_ids.iter().copied());
 
-    let mut achievements = Vec::new();
+    // The two lists are told apart by their ids: the arcade one holds only
+    // arcade ids, and the sniffer keeps returning repeats of either.
+    let arcade_ids: HashSet<u32> = achievement_ids
+        .iter()
+        .filter(|(_, arcade)| *arcade)
+        .map(|(id, _)| *id)
+        .collect();
 
-    while let Ok(data) = device_rx.recv() {
+    let mut regular: Option<Vec<u32>> = None;
+    let mut arcade: Option<Vec<u32>> = None;
+    // Set once the first list is in. The login burst carries both lists within
+    // milliseconds of each other, but the arcade one is not guaranteed to be in
+    // it, so the second is only waited for this long rather than forever.
+    let mut deadline: Option<Instant> = None;
+
+    loop {
+        let data = match deadline {
+            None => match device_rx.recv() {
+                Ok(data) => data,
+                Err(_) => break,
+            },
+            Some(deadline) => {
+                let timeout = deadline.saturating_duration_since(Instant::now());
+                match device_rx.recv_timeout(timeout) {
+                    Ok(data) => data,
+                    Err(_) => {
+                        tracing::info!("Second achievement list not seen, exporting what was found");
+                        break;
+                    }
+                }
+            }
+        };
+
         let Some(GamePacket::Commands(commands)) = sniffer.receive_packet(data) else {
             continue;
         };
 
         for command in commands {
-            if let Some(read_achievements) = sniffer.matches_achievement_packet(&command) {
-                tracing::info!("Found achievement packet");
+            let Some(read_achievements) = sniffer.matches_achievement_packet(&command) else {
+                continue;
+            };
 
-                // The login burst carries both the regular and the arcade list, so
-                // the second one found is not a repeat of the first.
-                if !achievements.is_empty() {
-                    continue;
-                }
-
-                for achievement in read_achievements {
-                    // The regular list marks finished ones with `finished`, the
-                    // arcade one with `completed`, which means the same thing.
-                    if achievement.completed {
-                        achievements.push(achievement.id);
-                    }
-                }
+            let is_arcade = read_achievements
+                .first()
+                .is_some_and(|achievement| arcade_ids.contains(&achievement.id));
+            let slot = if is_arcade { &mut arcade } else { &mut regular };
+            if slot.is_some() {
+                continue;
             }
+            tracing::info!(arcade = is_arcade, "Found achievement packet");
+
+            // The regular list marks finished ones with `finished`, the arcade
+            // one with `completed`, which means the same thing.
+            *slot = Some(
+                read_achievements
+                    .into_iter()
+                    .filter(|achievement| achievement.completed)
+                    .map(|achievement| achievement.id)
+                    .collect(),
+            );
+            deadline.get_or_insert_with(|| Instant::now() + SECOND_LIST_GRACE);
         }
 
-        if !achievements.is_empty() {
+        if regular.is_some() && arcade.is_some() {
             break;
         }
     }
 
+    let achievements: Vec<u32> = regular.into_iter().chain(arcade).flatten().collect();
     if achievements.is_empty() {
         return Err(anyhow::anyhow!("No achievements found"));
     }
