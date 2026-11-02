@@ -1,4 +1,5 @@
-#![windows_subsystem = "windows"]
+// Not for tests, which would have no console to print their results to.
+#![cfg_attr(not(test), windows_subsystem = "windows")]
 
 #[cfg(all(not(feature = "pcap"), feature = "pktmon"))]
 use std::env;
@@ -52,6 +53,12 @@ fn tracing_init() -> anyhow::Result<tracing_appender::non_blocking::WorkerGuard>
         .with_ansi(false)
         .init();
     tracing::info!("Tracing initialized and logging to file.");
+
+    // There's no console to print them to, and they are what a ticket needs most.
+    std::panic::set_hook(Box::new(|info| {
+        let backtrace = std::backtrace::Backtrace::force_capture();
+        tracing::error!("{info}\n{backtrace}");
+    }));
 
     Ok(guard)
 }

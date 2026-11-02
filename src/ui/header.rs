@@ -2,7 +2,7 @@ use egui_remixicon::icons;
 
 use crate::{
     app::{App, Message, State},
-    games, themes,
+    themes,
 };
 
 pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &mut App) {
@@ -14,11 +14,9 @@ pub fn show(ctx: &egui::Context, ui: &mut egui::Ui, app: &mut App) {
         let waiting = matches!(app.state, State::Waiting(_));
 
         let heading_text = match app.state {
-            State::Game | State::Achievements(_) | State::PullMenu => match app.game {
-                games::Game::Hsr => "Honkai Star Rail",
-                games::Game::Gi => "Genshin Impact",
-                games::Game::Zzz => "Zenless Zone Zero",
-            },
+            State::Game | State::Achievements(_) | State::PullMenu | State::RunError(_) => {
+                app.game.name()
+            }
             _ => "Menu",
         };
 

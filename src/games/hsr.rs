@@ -3,25 +3,80 @@ use std::{
     fs::File,
     io::{BufRead, BufReader},
     path::PathBuf,
-    sync::mpsc,
 };
 
-use auto_reliquary::{GamePacket, GameSniffer, matches_achievement_packet};
+use auto_reliquary::{
+    ConnectionPacket, GamePacket, GameSniffer, KeyState, SniffError, matches_achievement_packet,
+};
 use base64::prelude::*;
+
+use super::{Achievements, ExportError, KeyStage, PacketStream, Received};
+
+impl From<SniffError> for ExportError {
+    fn from(e: SniffError) -> Self {
+        match e {
+            SniffError::InitialKeyMissing {
+                version,
+                saw_handshake,
+            } => Self::KeyMissing {
+                version,
+                saw_handshake,
+            },
+            SniffError::SessionSeedMissing => Self::SessionSeedMissing,
+            SniffError::SessionKeyLost => Self::SessionKeyLost,
+        }
+    }
+}
+
+impl From<KeyState> for KeyStage {
+    fn from(state: KeyState) -> Self {
+        match state {
+            KeyState::None => Self::None,
+            KeyState::Dispatch => Self::Dispatch,
+            KeyState::Session => Self::Session,
+        }
+    }
+}
 
 pub fn sniff(
     achievement_ids: &[(u32, bool)],
-    device_rx: &mpsc::Receiver<Vec<u8>>,
-) -> anyhow::Result<Vec<u32>> {
-    let keys = load_keys()?;
+    stream: &mut PacketStream,
+) -> Result<Achievements, ExportError> {
+    sniff_with_keys(load_keys()?, achievement_ids, stream)
+}
 
+pub fn sniff_with_keys(
+    keys: HashMap<u32, Vec<u8>>,
+    achievement_ids: &[(u32, bool)],
+    stream: &mut PacketStream,
+) -> Result<Achievements, ExportError> {
     let mut sniffer = GameSniffer::new().set_initial_keys(keys);
 
     let mut achievements = Vec::new();
 
-    while let Ok(data) = device_rx.recv() {
-        let Some(GamePacket::Commands(commands)) = sniffer.receive_packet(data) else {
+    loop {
+        let data = match stream.next(None) {
+            Received::Packet(packet) => packet.data,
+            Received::Stopped => return Err(ExportError::Cancelled),
+            Received::Deadline | Received::Ended => break,
+        };
+
+        let Some(packet) = sniffer.receive_packet(data)? else {
             continue;
+        };
+        stream.note_key(sniffer.key_state().into());
+
+        let commands = match packet {
+            GamePacket::Commands(commands) => commands,
+            GamePacket::Connection(ConnectionPacket::HandshakeRequested) => {
+                stream.progress.handshakes += 1;
+                continue;
+            }
+            GamePacket::Connection(ConnectionPacket::Disconnected) => {
+                stream.progress.disconnects += 1;
+                continue;
+            }
+            GamePacket::Connection(_) => continue,
         };
 
         for command in commands {
@@ -48,13 +103,17 @@ pub fn sniff(
     }
 
     if achievements.is_empty() {
-        return Err(anyhow::anyhow!("No achievements found"));
+        return Err(ExportError::CaptureEnded);
     }
 
-    Ok(achievements)
+    Ok(Achievements {
+        ids: achievements,
+        breakdown: None,
+        capture_report: None,
+    })
 }
 
-fn load_keys() -> anyhow::Result<HashMap<u32, Vec<u8>>> {
+pub fn load_keys() -> anyhow::Result<HashMap<u32, Vec<u8>>> {
     let keys: HashMap<u32, String> = serde_json::from_slice(include_bytes!("../../keys/hsr.json"))?;
 
     let mut keys_bytes = HashMap::new();
