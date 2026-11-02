@@ -2,10 +2,12 @@ use std::thread;
 
 use crate::{
     app::{App, Message, State},
-    games,
+    games::{self, Achievements, Breakdown},
 };
 
-pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
+pub fn show(ui: &mut egui::Ui, result: &Achievements, app: &App) {
+    let achievements = &result.ids;
+
     let key = match app.game {
         games::Game::Hsr => "hsr_achievements",
         games::Game::Gi => "gi_achievements",
@@ -13,6 +15,11 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
     };
 
     ui.label("Finished");
+
+    if let Some(breakdown) = result.breakdown {
+        ui.label(format!("Normal: {}", Breakdown::describe(breakdown.regular)));
+        ui.label(format!("Arcade: {}", Breakdown::describe(breakdown.arcade)));
+    }
 
     if ui
         .button(format!(
@@ -36,7 +43,10 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
 
     ui.hyperlink_to("Click here to import", "https://stardb.gg/import");
 
-    if let Some(user) = &app.user
+    // A loaded capture is usually someone else's, and syncing replaces everything
+    // on the account.
+    if result.capture_report.is_none()
+        && let Some(user) = &app.user
         && ui
             .button(format!("Sync to account: \"{}\"", user.username))
             .clicked()
@@ -136,5 +146,11 @@ pub fn show(ui: &mut egui::Ui, achievements: &[u32], app: &App) {
                 }
             });
         }
+    }
+
+    if let Some(report) = &result.capture_report {
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            super::game::capture_report(ui, report, app);
+        });
     }
 }

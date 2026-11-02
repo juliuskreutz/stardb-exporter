@@ -3,23 +3,57 @@ use std::{
     fs::File,
     io::{BufRead, BufReader},
     path::PathBuf,
-    sync::mpsc,
     time::{Duration, Instant},
 };
 
-use auto_discipher::{GamePacket, GameSniffer};
+use auto_discipher::{ConnectionPacket, GamePacket, GameSniffer, KeyState, SniffError};
 use base64::prelude::*;
+
+use super::{Achievements, Breakdown, ExportError, KeyStage, PacketStream, Received};
 
 /// How long to keep listening for the second achievement list once the first
 /// one is in.
 const SECOND_LIST_GRACE: Duration = Duration::from_secs(10);
 
+impl From<SniffError> for ExportError {
+    fn from(e: SniffError) -> Self {
+        match e {
+            SniffError::InitialKeyMissing {
+                version,
+                saw_handshake,
+            } => Self::KeyMissing {
+                version,
+                saw_handshake,
+            },
+            SniffError::SessionSeedMissing => Self::SessionSeedMissing,
+            SniffError::BruteforceFailed => Self::BruteforceFailed,
+            SniffError::SessionKeyLost => Self::SessionKeyLost,
+        }
+    }
+}
+
+impl From<KeyState> for KeyStage {
+    fn from(state: KeyState) -> Self {
+        match state {
+            KeyState::None => Self::None,
+            KeyState::Dispatch => Self::Dispatch,
+            KeyState::Session => Self::Session,
+        }
+    }
+}
+
 pub fn sniff(
     achievement_ids: &[(u32, bool)],
-    device_rx: &mpsc::Receiver<Vec<u8>>,
-) -> anyhow::Result<Vec<u32>> {
-    let keys = load_keys()?;
+    stream: &mut PacketStream,
+) -> Result<Achievements, ExportError> {
+    sniff_with_keys(load_keys()?, achievement_ids, stream)
+}
 
+pub fn sniff_with_keys(
+    keys: Vec<Vec<u8>>,
+    achievement_ids: &[(u32, bool)],
+    stream: &mut PacketStream,
+) -> Result<Achievements, ExportError> {
     let mut sniffer = GameSniffer::new()
         .set_initial_keys(keys)
         .set_achievement_ids(achievement_ids.iter().copied());
@@ -40,25 +74,39 @@ pub fn sniff(
     let mut deadline: Option<Instant> = None;
 
     loop {
-        let data = match deadline {
-            None => match device_rx.recv() {
-                Ok(data) => data,
-                Err(_) => break,
-            },
-            Some(deadline) => {
-                let timeout = deadline.saturating_duration_since(Instant::now());
-                match device_rx.recv_timeout(timeout) {
-                    Ok(data) => data,
-                    Err(_) => {
-                        tracing::info!("Second achievement list not seen, exporting what was found");
-                        break;
-                    }
-                }
+        let packet = match stream.next(deadline) {
+            Received::Packet(packet) => packet,
+            Received::Stopped => return Err(ExportError::Cancelled),
+            Received::Ended => break,
+            Received::Deadline => {
+                tracing::info!("Second achievement list not seen, exporting what was found");
+                break;
             }
         };
 
-        let Some(GamePacket::Commands(commands)) = sniffer.receive_packet(data) else {
-            continue;
+        let packet = match sniffer.receive_packet_at(packet.data, packet.timestamp_ms) {
+            Ok(Some(packet)) => packet,
+            Ok(None) => continue,
+            // One list is still worth more than none.
+            Err(e) if regular.is_some() || arcade.is_some() => {
+                tracing::warn!("{e}, exporting what was found");
+                break;
+            }
+            Err(e) => return Err(e.into()),
+        };
+        stream.note_key(sniffer.key_state().into());
+
+        let commands = match packet {
+            GamePacket::Commands(commands) => commands,
+            GamePacket::Connection(ConnectionPacket::HandshakeRequested) => {
+                stream.progress.handshakes += 1;
+                continue;
+            }
+            GamePacket::Connection(ConnectionPacket::Disconnected) => {
+                stream.progress.disconnects += 1;
+                continue;
+            }
+            GamePacket::Connection(_) => continue,
         };
 
         for command in commands {
@@ -92,12 +140,26 @@ pub fn sniff(
         }
     }
 
-    let achievements: Vec<u32> = regular.into_iter().chain(arcade).flatten().collect();
-    if achievements.is_empty() {
-        return Err(anyhow::anyhow!("No achievements found"));
+    if regular.is_none() && arcade.is_none() {
+        return Err(ExportError::CaptureEnded);
     }
 
-    Ok(achievements)
+    let breakdown = Breakdown {
+        regular: regular.as_ref().map(Vec::len),
+        arcade: arcade.as_ref().map(Vec::len),
+    };
+    let ids: Vec<u32> = regular.into_iter().chain(arcade).flatten().collect();
+    if ids.is_empty() {
+        return Err(ExportError::Other(
+            "The achievement lists came through, but none of them are finished".to_string(),
+        ));
+    }
+
+    Ok(Achievements {
+        ids,
+        breakdown: Some(breakdown),
+        capture_report: None,
+    })
 }
 
 /// The shipped dispatch keys, oldest first.
@@ -106,7 +168,7 @@ pub fn sniff(
 /// Which one is right is decided by testing against the traffic rather than by
 /// the version string, since the version is only a label. That way a capture
 /// from an older build still decrypts after an update.
-fn load_keys() -> anyhow::Result<Vec<Vec<u8>>> {
+pub fn load_keys() -> anyhow::Result<Vec<Vec<u8>>> {
     let keys: serde_json::Map<String, serde_json::Value> =
         serde_json::from_slice(include_bytes!("../../keys/zzz.json"))?;
 

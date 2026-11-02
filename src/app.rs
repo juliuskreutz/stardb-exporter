@@ -1,7 +1,7 @@
 use std::{path::PathBuf, sync::mpsc, thread};
 
 use crate::{
-    games::{self, Game},
+    games::{self, Achievements, ErrorReport, Game, RunHandle},
     themes::{self, Theme},
     ui,
 };
@@ -14,9 +14,10 @@ pub enum State {
     Waiting(String),
     PullMenu,
     Game,
-    Achievements(Vec<u32>),
+    Achievements(Achievements),
     Pulls(String),
     Error(String),
+    RunError(ErrorReport),
 }
 
 pub enum Message {
@@ -29,6 +30,13 @@ pub enum Message {
     Path(PathBuf),
     Logout,
     Toast(egui_notify::Toast),
+    /// Read the current game's achievements from the network.
+    StartRun,
+    /// Read the current game's achievements from a capture file.
+    StartReplay(PathBuf),
+    StopRun,
+    RunEnded(State),
+    RunWarning(Option<String>),
 }
 
 pub struct App {
@@ -42,6 +50,8 @@ pub struct App {
     pub paths: Paths,
     pub account_popup_open: bool,
     pub theme_popup_open: bool,
+    pub run: Option<RunHandle>,
+    pub run_warning: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -152,6 +162,8 @@ impl App {
             paths,
             account_popup_open: false,
             theme_popup_open: false,
+            run: None,
+            run_warning: None,
         }
     }
 
@@ -203,7 +215,45 @@ impl App {
             Message::Toast(toast) => {
                 self.toasts.add(toast);
             }
+            Message::StartRun => {
+                if self.run.is_none() {
+                    let run = self.start_run();
+                    self.game.achievements(&self.message_tx, run);
+                }
+            }
+            Message::StartReplay(path) => {
+                if self.run.is_none() {
+                    let run = self.start_run();
+                    self.game.replay(path, &self.message_tx, run);
+                }
+            }
+            Message::StopRun => {
+                if let Some(run) = &self.run {
+                    run.stop();
+                    self.run_warning = None;
+                    self.state = State::Waiting("Stopping".to_string());
+                }
+            }
+            Message::RunEnded(state) => {
+                self.run = None;
+                self.run_warning = None;
+                self.toasts.dismiss_all_toasts();
+                self.state = state;
+            }
+            Message::RunWarning(warning) => self.run_warning = warning,
         }
+    }
+}
+
+impl App {
+    fn start_run(&mut self) -> RunHandle {
+        let run = RunHandle::default();
+        self.run = Some(run.clone());
+        self.run_warning = None;
+        // A "Ready" left from the last run would be saying this one is already.
+        self.toasts.dismiss_all_toasts();
+        self.state = State::Waiting("Preparing".to_string());
+        run
     }
 }
 
@@ -215,7 +265,7 @@ impl eframe::App for App {
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Ok(message) = self.message_rx.try_recv() {
+        while let Ok(message) = self.message_rx.try_recv() {
             self.message(message);
         }
 
@@ -227,12 +277,13 @@ impl eframe::App for App {
             ui.separator();
 
             match &self.state {
-                State::Waiting(s) => ui::waiting::show(ui, s),
+                State::Waiting(s) => ui::waiting::show(ui, s, self),
                 #[cfg(not(debug_assertions))]
                 State::OutOfDate(status) => {
                     ui::waiting::show(
                         ui,
                         &format!("Updated to Version {}. Restarting!", status.version()),
+                        self,
                     );
 
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -241,6 +292,7 @@ impl eframe::App for App {
                 State::Menu => ui::menu::show(ui, self),
                 State::Achievements(achievements) => ui::achievements::show(ui, achievements, self),
                 State::Error(s) => ui::error::show(ui, s),
+                State::RunError(report) => ui::error::show_report(ui, report, self),
                 State::Game => ui::game::show(ui, self),
                 State::Pulls(url) => ui::pulls::show(ui, url, self),
                 State::PullMenu => ui::pull_menu::show(ui, self),
