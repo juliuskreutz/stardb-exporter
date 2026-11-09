@@ -39,6 +39,13 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
         }
     }
 
+    let reminder = match app.game {
+        games::Game::Hsr => "Reminder: open the Warp menu in-game and press the 'Details' and 'History' buttons before exporting your history.",
+        games::Game::Gi => "Reminder: open the Wish menu in-game and press the 'Details' and 'History' buttons before exporting your history.",
+        games::Game::Zzz => "Reminder: open the Signal menu in-game and press the 'Details' and 'History' buttons before exporting your history.",
+    };
+    ui.label(reminder);
+
     if ui.button("Automatic").clicked() {
         match app.game.game_path() {
             Ok(path) => app.message_tx.send(Message::Path(path)).unwrap(),
