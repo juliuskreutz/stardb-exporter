@@ -1,13 +1,13 @@
 [package]
 name = "stardb-exporter"
-version = "2.24.1"
+version = "2.24.2"
 edition = "2024"
 
 [dependencies]
 anyhow = "1.0.102"
 arboard = "3.6.1"
 auto-artifactarium = { git = "https://github.com/hashblen/auto-artifactarium", version = "2.0.0" }
-auto-discipher = { git = "https://github.com/hashblen/auto-discipher", version = "2.0.0" }
+auto-discipher = { git = "https://github.com/hashblen/auto-discipher", version = "2.1.0" }
 auto-reliquary = { git = "https://github.com/hashblen/auto-reliquary", version = "2.0.0" }
 base64 = "0.22.1"
 eframe = { version = "0.33.3", features = ["persistence"] }
