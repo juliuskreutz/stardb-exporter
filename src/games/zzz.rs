@@ -162,21 +162,19 @@ pub fn sniff_with_keys(
     })
 }
 
-/// The shipped dispatch keys, oldest first.
+/// The shipped dispatch keys, one per region gateway, in file order.
 ///
-/// Read in file order and reversed, so the newest key is the one appended last.
-/// Which one is right is decided by testing against the traffic rather than by
-/// the version string, since the version is only a label. That way a capture
-/// from an older build still decrypts after an update.
+/// Each `prod-gf-*` gateway hands out its own key. The names are only labels:
+/// which key is right is decided by testing against the traffic, in the order
+/// the keys appear in the file.
 pub fn load_keys() -> anyhow::Result<Vec<Vec<u8>>> {
     let keys: serde_json::Map<String, serde_json::Value> =
         serde_json::from_slice(include_bytes!("../../keys/zzz.json"))?;
 
-    let mut keys_bytes = keys
+    let keys_bytes = keys
         .values()
         .map(|key| BASE64_STANDARD.decode(key.as_str().unwrap()))
         .collect::<Result<Vec<_>, _>>()?;
-    keys_bytes.reverse();
 
     Ok(keys_bytes)
 }
